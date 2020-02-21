@@ -19,11 +19,11 @@ JASM runs within the [Eclipse](http://www.eclipse.org/) IDE.
 
 ## References
 
-##Distribution statement
+## Distribution statement
 
 Approved for public release: distribution unlimited. Redistributions of source and binary forms, with or without modification, are permitted if redistributions retain the above distribution statement and the following disclaimer.
 
-##Disclaimer
+## Disclaimer
 
 The software is supplied “as is” without warranty of any kind.
 
