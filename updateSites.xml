@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bookmarks>
+   <site url="http://jact-r.org/update2/release/org.commonreality.update/" selected="true" name="CommonReality UpdateSite"/>
+   <site url="http://download.eclipse.org/nebula/snapshot" selected="true" name="Eclipse Nebula Plugin Update Site"/>
+   <site url="http://jact-r.org/update2/release/org.jactr.eclipse.update/" selected="true" name="jACT-R Eclipse UpdateSite"/>
+   <site url="http://jact-r.org/update2/release/org.jactr.io2.update/" selected="true" name="jACT-R IO2 UpdateSite"/>
+   <site url="http://jact-r.org/update2/release/org.jactr.update/" selected="true" name="jACT-R UpdateSite"/>
+   <site url="http://jact-r.org/update2/release/org.jactr.jasm/" selected="true" name="JASM UpdateSite"/>
+   <site url="https://download.eclipse.org/tools/orbit/downloads/drops/R20190827152740/repository" selected="true" name="Orbit"/>
+</bookmarks>
