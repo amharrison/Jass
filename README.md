@@ -1,5 +1,5 @@
 # JASM
-The jACT-R Assembler is a high-level language for [jACT-R](http://www.jact-r.org/), the Java implementation of [ACT-R](http://act-r.psy.cmu.edu). It provides an imperative programming model that compiles into productions for execution. 
+The jACT-R Assembler is a high-level language for [jACT-R](http://www.jact-r.org/), the Java implementation of [ACT-R](http://act-r.psy.cmu.edu). It provides an imperative programming model that compiles into productions for execution. You can [install](#installation) the binaries directly and go on to the [tutorial](#tutorial), or you can [build](#build) the software from scratch.
 
 ## Installation
 JASM runs within the [Eclipse](http://www.eclipse.org/) IDE. 
@@ -15,9 +15,13 @@ JASM runs within the [Eclipse](http://www.eclipse.org/) IDE.
 9. Click **Next** to finalize the installation.
 
 ## Tutorial
+The tutorial can be found [here](). It follows the traditional ACT-R unit 1 tutorial for its examples.
 
+## Build
+Follow the installation instructions but do not install the JASM components in the final step. Import all of the *mil.navy.nrl.ncarai.jasm* packages from here. Use Maven to generate the source artifacts. 
 
 ## References
+
 
 ## Distribution statement
 
