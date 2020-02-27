@@ -1,5 +1,5 @@
 # JASM
-The jACT-R Assembler is a high-level language for [jACT-R](http://www.jact-r.org/), the Java implementation of [ACT-R](http://act-r.psy.cmu.edu). It provides an imperative programming model that compiles into productions for execution. You can [install](#installation) the binaries directly and go on to the [tutorial](#tutorial), or you can [build](#build) the software from scratch.
+The jACT-R Assembler is a high(er)-level language for [jACT-R](http://www.jact-r.org/), the Java implementation of [ACT-R](http://act-r.psy.cmu.edu). It provides an imperative programming model that compiles into productions for execution. You can [install](#installation) the binaries directly and go on to the [tutorial](#tutorial), or you can [build](#build) the software from scratch.
 
 ## Installation
 JASM runs within the [Eclipse](http://www.eclipse.org/) IDE. 
