@@ -1,0 +1,112 @@
+
+namespace unit1.semanticDefinition target unit1.semantic{
+import jactr.declarative.*
+import jactr.procedural.*
+import jactr.retrieval.*
+import jactr.imaginal.*
+import jactr.visual.*
+import jactr.aural.*
+import jactr.vocal.*
+import jactr.goal.*
+import jasm.procedural.Goal.*
+
+
+chunk shark, dangerous, locomotion, swimming, category, fish, salmon, edible, breathe, gills, animal, moves, skin,
+  canary, sings, bird, ostrich, flies, height, tall, wings, flying, yes, no, pending, color
+
+ 
+chunktype property {
+  object    = null
+  attribute = null
+  value     = null
+}
+
+property p1 (object=shark, attribute=dangerous, value=true), p2 (object=shark, attribute=locomotion, value=swimming),
+  p3 (object=shark, attribute=category, value=fish), p4 (object=salmon, attribute=edible, value=true),
+  p5 (object=salmon, attribute=locomotion, value=swimming), p6 (object=salmon, attribute=category, value=fish),
+  p7 (object=fish, attribute=breathe, value=gills), p8 (object=fish, attribute=locomotion, value=swimming),
+  p9 (object=fish, attribute=category, value=animal), p10 (object=animal, attribute=moves, value=true),
+  p11 (object=animal, attribute=skin, value=true), p12 (object=canary, attribute=color, value=yellow),
+  p13 (object=canary, attribute=sings, value=true), p14 (object=canary, attribute=category, value=bird),
+  p15 (object=ostrich, attribute=flies, value=false), p16 (object=ostrich, attribute=height, value=tall),
+  p17 (object=ostrich, attribute=category, value=bird), p18 (object=bird, attribute=wings, value=true),
+  p19 (object=bird, attribute=locomotion, value=flying), p20 (object=bird, attribute=category, value=animal)
+
+
+
+function element IsMember(slot object = null, slot category = null)
+{
+  slot judgment = pending
+
+  while(goal(judgmentIsPending))
+  {
+    /*
+     * retrieve something related to object=object,
+     * attribute=category. if nothing found, judgment=false.
+     * Note: lack of mapping (->) block, retrieval is 
+     * still full
+     */
+    request retrieval(initialRetrieval), 
+                 goal(parameterBinding) as property
+    =>{
+      judgment = false
+    }
+    
+    /*
+     * because we didn't use a mapping block (->) prior, 
+     * we can test the retrieval contents directly here.
+     */
+    if(retrieval(directVerify) &&  
+        goal(parameterBinding)){
+      judgment = true
+    }
+    else{
+      /*
+       * change the object that we are querying with
+       * the retrieval request. this is the chaining
+       * of the retrieval
+       */
+      object = retrieval.value
+    }
+    /*
+     * because we didn't use a mapping block (->), we
+     * must manually remove the retrieval contents.
+     */
+    remove retrieval
+  }
+  
+  output("=object =category ? =judgment", goal(judgmentBinding))
+  return judgment
+}
+
+initialRetrieval = {
+  isa property
+  object    =  =object
+  attribute =  category
+}
+parameterBinding = {
+  isa IsMember
+  object   =  =object
+  category =  =category
+}
+
+directVerify = {
+  isa property
+  object    =  =object
+  attribute =  category
+  value     =  =category
+}
+judgmentIsPending = {
+  isa IsMember
+  judgment =  pending
+} 
+
+judgmentBinding = {
+  isa IsMember
+  object   =  =object
+  category =  =category
+  judgment = =judgment
+}
+
+
+}

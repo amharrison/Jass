@@ -1,0 +1,444 @@
+namespace jasm.testGenerator target jasm.test{
+import jactr.declarative.*
+import jactr.procedural.*
+import jactr.retrieval.*
+import jactr.imaginal.*
+import jactr.visual.*
+import jactr.aural.*
+import jactr.vocal.*
+import jactr.motor.*
+import jactr.meta.*
+import jactr.goal.*   
+//import jasm.procedural.Goal.*
+//import jasm.procedural.Buffers.* 
+
+@generator[
+  "IGoalManipulator" : "mil.navy.nrl.ncarai.jasm.jactrio2.procedural.impl.DefaultGoalManipulator"
+]
+
+
+chunktype Association {
+  one = null
+  two = null
+}
+
+ifTestGoalBinding = {
+  isa IfTest
+  param =  =parameter
+}
+
+paramNotP = {
+  isa IfTest
+  param != 'p'
+}
+
+paramIsA={
+  isa IfTest
+  param =  'a'
+} 
+
+function void IfTest(){
+  slot param = 'p'
+ output("=parameter",goal(ifTestGoalBinding))
+  if(goal(paramNotP)){
+    param = 'f'
+  }
+ else
+ {
+    param = 'a'
+  }
+ output("=parameter",goal(ifTestGoalBinding))
+  if(goal(paramIsA)){
+    param = 's'
+  } 
+ else 
+ {
+    param = 'a'
+  }
+ output("=parameter",goal(ifTestGoalBinding))
+  if(goal(paramNotP)){
+    param = 's!'
+  }
+ output("=parameter",goal(ifTestGoalBinding))
+  return
+}
+
+paramIsBlue = {
+  isa RepeatTest
+  param =  blue
+}
+unretrievedColor = {
+  isa color
+  :recently-retrieved =  false
+}
+
+repeatTestGoalBinding = {
+  isa RepeatTest
+  param =  =parameter
+} 
+
+
+function void RepeatTest(){
+  slot param = 'p'
+  
+  repeat{
+    request retrieval(unretrievedColor) as color
+      -> param = retrieval.alpha 
+      param = retrieval
+      => {
+      param = 'failed'
+    }
+  }until(goal(paramIsBlue))
+  if(goal(paramIsBlue)){
+    param = 'passed 1/2!'
+  }
+  else
+  {
+    param = "failed!"
+  }
+  output("=parameter",goal(repeatTestGoalBinding))
+  
+  param = 'p'
+  
+  until(goal(paramIsBlue))
+  {
+    request retrieval(unretrievedColor) as color
+      -> param = retrieval
+  } 
+    
+  if(goal(paramIsBlue)){
+    param = 'passed 2/2!'
+  }
+  else
+  {
+    param = "failed!"
+  }
+  
+  output("=parameter",goal(repeatTestGoalBinding))
+  return
+}
+
+paramIsNotBlue={
+  isa WhileTest
+  param != blue
+}
+
+paramIsNotRed={
+  isa WhileTest
+  param != red
+}
+
+whileParamIsBlue = {
+  isa WhileTest
+  param =  blue
+}
+
+whileParamIsRed = {
+  isa WhileTest
+  param =  red
+}
+
+
+whileTestGoalBinding = {
+  isa WhileTest
+  param =  =parameter
+} 
+
+function void WhileTest(){
+  slot param = 'p'
+
+  while(goal(paramIsNotBlue))
+  {
+    request retrieval(unretrievedColor) as color
+      -> param = retrieval
+      => {
+      param = 'failed'
+    }
+  }
+  if(goal(whileParamIsBlue)){
+    param = 'passed 1/2!'
+  }
+  else
+  {
+    param = "failed!"
+  }
+  output("=parameter",goal(whileTestGoalBinding))
+  
+  do{
+    request retrieval(unretrievedColor) as color
+      -> param = retrieval
+      => {
+      param = 'failed'
+    }
+  }while(goal(paramIsNotBlue))
+    /*
+     * 
+     */
+  if(goal(whileParamIsBlue)){
+    param = 'passed 2/2!'
+  }
+  else
+  {
+    param = "failed!"
+  }  
+  output("=parameter",goal(whileTestGoalBinding))
+  return
+}
+
+
+Association one(one=red, two=orange), two(one=orange, two=yellow)
+
+initialRetrieval = {
+  isa Association
+  one =  red
+}
+failingRetrieval = {
+  isa Association
+  one =  yellow
+}
+
+nextRetrieval = {
+  isa Association
+  one =  =parameter
+}
+
+requestParameterBinding = {
+  isa RequestTest
+  param =  =parameter
+}
+paramIsYellow = {
+  isa RequestTest
+  param =  yellow
+}
+
+function void RequestTest(){
+  slot param = 'p'
+    /*
+     * test literal retrieval
+     */
+  request retrieval(one) as Association
+    -> param = retrieval.two
+    =>{
+    param = 'failed'
+  }
+  output("=parameter",goal(requestParameterBinding))
+    /*
+     * test buffer.slot reference
+     */
+  request retrieval(goal.param) as color
+    -> param = retrieval
+    =>{
+    param = 'failed'
+  }
+  output("=parameter",goal(requestParameterBinding))
+    /*
+     * test (goal.) slot implicit reference
+     */
+  request retrieval(param) as color
+    -> param = retrieval
+    =>{
+    param = 'failed'
+  }
+  output("=parameter",goal(requestParameterBinding))
+    /*
+     * test buffer reference
+     */
+  request retrieval(goal) as RequestTest
+    -> param = retrieval.param
+     param = 'failed'
+    =>{
+    param = 'success'
+  }
+   
+  // standard
+  output("=parameter",goal(requestParameterBinding))
+    // red->orange
+  request retrieval(initialRetrieval)
+    -> param = retrieval.two
+    => {
+    param = 'failed'
+  }
+  output("=parameter",goal(requestParameterBinding))
+//  //orange->yellow
+  request retrieval(nextRetrieval), goal(requestParameterBinding)
+    =>{
+    param = 'failed'
+  } 
+  output("=parameter",goal(requestParameterBinding))  
+//  //yellow
+  param = retrieval.two 
+  
+  output("=parameter",goal(requestParameterBinding))
+  
+  
+
+  remove retrieval
+    // yellow-green doesn't exist
+  request retrieval(failingRetrieval), goal(requestParameterBinding)
+    -> param = retrieval.two
+  request retrieval()
+    => {
+    if(goal(paramIsYellow)){
+      param = "passed"
+    } 
+    else
+     {
+      param = 'failed'
+    }
+  }
+  output("=parameter",goal(requestParameterBinding))
+  return
+}
+
+forLoopParamBinding= {
+  isa ForLoopTest
+  param =  =parameter
+}
+
+forLoopInitialRetrieval = {
+  isa Association
+  one =  =parameter
+}
+
+forLoopSubsequentRetrieval = {
+  isa Association
+  one =  =parameter
+}
+
+parameterIsYellow={
+  isa ForLoopTest
+  param =  yellow
+}
+
+function element ForLoopTest(){
+  slot param = red
+  
+  for(retrieval,
+    forLoopInitialRetrieval, goal(forLoopParamBinding),
+    forLoopSubsequentRetrieval, goal(forLoopParamBinding)){
+    output("=parameter", goal(forLoopParamBinding))
+    param = retrieval.two
+  } 
+  if(goal(parameterIsYellow)){
+    param = "Passed!"
+  }
+  else
+  {
+    param = "failed!"
+  }
+  output("=parameter", goal(forLoopParamBinding))
+  return goal.param
+}
+
+function void TestInsertion(){
+  <[iEntry, iExit, generate]>
+  return
+}
+
+
+matchTestParamIsNull={
+  isa MatchTest
+  param =  null
+}
+
+matchTestParamIsNotNull={
+  isa MatchTest
+  param != null
+}
+
+matchTestParamBinding={
+  isa MatchTest
+  param =  =parameter
+}
+
+function void MatchTest(){
+  slot param = null
+  match{
+    case goal(matchTestParamIsNull) : {
+      param="passed"
+    }
+    default : {
+    param = "failed"
+   }
+  }
+  output("match =parameter", goal(matchTestParamBinding))
+  
+  param = "failed"
+  
+  match{
+    case goal(matchTestParamIsNotNull)[0] : {
+      param="failed"
+    }
+    case goal(matchTestParamIsNotNull)[1] : {
+      param="passed"
+    }
+    default : {
+    param = "failed"
+  }
+  }
+  
+  output("match =parameter", goal(matchTestParamBinding))
+  
+  match{
+    case goal(matchTestParamIsNull) : {
+      param="failed"
+    }
+    default : {
+    param = "passed"
+  }
+  }
+  output("match =parameter", goal(matchTestParamBinding))
+  return
+}
+
+
+functionResultBinding = {
+  isa FunctionTest
+  result =  =result
+}
+
+function void FunctionTest(){
+  slot result = null 
+  MatchTest()
+  RepeatTest()
+  RequestTest() 
+  TestInsertion()
+  WhileTest()
+  IfTest() 
+  result = ParameterTest(parameter=blue)
+  result = ForLoopTest()
+  result = NumberReturnTest()
+  output("=result", goal(functionResultBinding))
+  return
+}
+
+function element ParameterTest(slot parameter=null)
+{
+  return yellow
+} 
+
+function element NumberReturnTest(){
+  return 0
+}
+
+function element StringReturnTest(){
+  return "string"
+}
+
+function element NullReturnTest(){
+  return null
+}
+
+function element BooleanReturnTest(){
+  return true
+}
+
+function void RewardTest(){
+  reward -1
+  return
+}
+
+
+}
+
+

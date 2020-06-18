@@ -1,0 +1,65 @@
+/*
+ * The namespace defines the location of your model in a global scope.
+ * This is used when embedding other model content within a model
+ */
+ namespace edu.institution.lab.project.Model{
+/*
+ * These are the namespaces for common types and buffers. 
+ */	
+ import jactr.declarative.*
+ import jactr.procedural.*
+ import jactr.retrieval.*
+ import jactr.imaginal.*
+ import jactr.goal.*
+/*
+ * modules define theoretically relevant contributions to the model. A 
+ * declarative and procedural module are the bare minimum. Note: parameters
+ * are denoted by [].
+ */
+ module "org.jactr.core.module.declarative.six.DefaultDeclarativeModule6" [
+   "ActivationNoise"          : "0"
+   "BaseLevelConstant"        : "0"
+   "EnablePartialMatching"    : "false"
+   "MaximumDifference"        : "-1"
+   "MaximumSimilarity"        : "0"
+   "MismatchPenalty"          : "1"
+   "PermanentActivationNoise" : "0"]
+ module "org.jactr.core.module.procedural.six.DefaultProceduralModule6" [
+   "DefaultProductionFiringTime" : "0.05"
+   "ExpectedUtilityNoise"        : "0"
+   "NumberOfProductionsFired"    : "0" ]
+ module "org.jactr.core.module.goal.six.DefaultGoalModule6" [ ]
+ module "org.jactr.core.module.retrieval.six.DefaultRetrievalModule6" [
+   "EnableIndexedRetrievals" : "false"
+   "FINSTDurationTime"       : "3.0"
+   "LatencyFactor"           : "1"
+   "NumberOfFINSTs"          : "4"
+   "RetrievalThreshold"      : "0" ]
+   
+ /**
+  * common buffers. They are @overridden because we are telling the compiler to
+  * use this particular definition and not the ones in jactr.declarative and
+  * jactr.retrieval
+  */  
+ buffers {
+   @Override
+   goal {} [
+     "Activation"              : "1"
+     "G"                       : "20"
+     "StrictHarvestingEnabled" : "false" ]
+   @Override  
+   retrieval {} [
+     "Activation"              : "0"
+     "G"                       : "0"
+     "StrictHarvestingEnabled" : "true" ]
+ }
+
+/*
+ * chunks and types
+ */ 
+ 
+/*
+ * productions
+ */  
+ 
+}

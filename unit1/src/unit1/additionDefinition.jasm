@@ -1,0 +1,69 @@
+namespace unit1.additionDefinition target unit1.addition{
+  
+import jactr.declarative.*
+import jactr.procedural.*
+import jactr.retrieval.*
+import jactr.imaginal.*
+import jactr.goal.*
+import jasm.procedural.Goal.*
+ 
+chunktype count-order {
+  first  = null
+  second = null
+}
+
+count-order aa (first=0.0, second=1.0), bb (first=1.0, second=2.0), cc (first=2.0, second=3.0),
+  dd (first=3.0, second=4.0), ee (first=4.0, second=5.0), ff (first=5.0, second=6.0), gg (first=6.0, second=7.0),
+  hh (first=7.0, second=8.0), ii (first=8.0, second=9.0), jj (first=9.0, second=10.0)
+  
+countIsNotArg2 = {
+  isa Add
+  count =  =count
+  arg2  != =count
+}
+
+countBinding = {
+  isa Add
+  count =  =var
+}
+
+retrieveCountOrder = {
+  isa count-order
+  first =  =var
+}
+
+sumBinding = {
+  isa Add
+  sum =  =var
+} 
+
+/**
+ * Add two numbers arg1, arg2. This is 
+ * done by counting using count retrievals.
+ * For each count retrieved and incremented,
+ * we also retrieve the next sum 
+ * incrementing that along the way.
+ */  
+function element Add(slot arg1 = 0, 
+                     slot arg2 = 0)
+{
+  slot count = 0
+  slot sum = 0
+  sum = arg1 
+  
+  while(goal(countIsNotArg2))
+  {
+    request retrieval(retrieveCountOrder),
+                 goal(countBinding)
+      -> count = retrieval.second
+      
+    request retrieval(retrieveCountOrder),
+                 goal(sumBinding)
+      -> sum = retrieval.second
+  }
+  
+  output("Sum =var", goal(sumBinding))
+  return sum
+}
+
+}

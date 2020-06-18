@@ -1,0 +1,186 @@
+ 
+namespace jasm.testErrors target jasm.errorTest{
+import jactr.declarative.*
+import jactr.procedural.*
+import jactr.retrieval.*
+import jactr.imaginal.*
+import jactr.visual.*
+import jactr.aural.*
+import jactr.vocal.*
+import jactr.motor.*
+import jactr.goal.*
+//import jasm.procedural.Goal.*
+//import jasm.bufferDefs.*
+//import jasm.procedural.Buffers.*
+  
+//goal writable requests * -> * 
+//imaginal writable requests * -> *
+//retrieval readable requests * -> *
+//motor error requests motor-command -> , motor-clear -> 
+//vocal error requests vocal-command -> 
+//visual-location readable error requests visual-location -> visual-location
+//visual readable error requests move-attention -> visual-object, attend-to -> visual-object,
+// clear -> 
+//aural-location readable error requests audio-event -> audio-event 
+//aural readable error requests attend-to -> sound, clear ->  
+ 
+chunktype Association {
+  one = null
+  two = null 
+}
+
+
+unretrievedColor = {
+  isa color
+  :recently-retrieved =  false
+}
+
+
+Association one(one=red, two=orange), two(one=orange, two=yellow)
+
+
+initialRetrieval = {
+  isa Association
+  one =  red
+}
+failingRetrieval = {
+  isa Association
+  one =  yellow
+}
+
+nextRetrieval = {
+  isa Association
+  one =  =parameter
+  
+}
+
+requestParameterBinding = {
+  isa RequestTest
+  param =  =parameter
+}
+
+paramIsYellow = {
+  isa RequestTest
+  param =  yellow
+}
+
+
+function void RequestTest(){
+  slot param = 'p'
+    // standard
+    // red->orange
+  request retrieval(initialRetrieval)
+    -> param = retrieval.two
+    => {
+    param = 'failed'
+  }
+//  //orange->yellow
+  request retrieval(nextRetrieval), goal(requestParameterBinding)
+    =>{
+    param = 'failed' 
+  } 
+
+//  retrieval.two = param
+   
+//  yellow
+  param = retrieval.two 
+  remove retrieval
+  
+  request retrieval(failingRetrieval), goal(requestParameterBinding)
+    -> param = retrieval.two
+  request retrieval()
+    => {
+    if(goal(paramIsYellow)){
+      param = "passed"
+    } 
+    else
+     {
+      param = 'failed'
+    }
+  }
+  return
+}
+
+forLoopParamBinding= {
+  isa ForLoopTest
+  param =  =parameter
+}
+
+forLoopInitialRetrieval = {
+  isa Association
+  one =  =parameter
+}
+
+forLoopSubsequentRetrieval = {
+  isa Association
+  one =  =parameter
+}
+
+parameterIsYellow={
+  isa ForLoopTest
+  param =  yellow
+}
+
+function element ForLoopTest(){
+  slot param = red
+  slot iter = null
+  
+  for(retrieval,
+    forLoopInitialRetrieval, goal(forLoopParamBinding),
+    forLoopSubsequentRetrieval, goal(forLoopParamBinding)){
+    output("=parameter", goal(forLoopParamBinding))
+    if(goal(parameterIsYellow)){
+      param = retrieval.two
+    }
+  }
+  if(goal(parameterIsYellow)){
+    param = "Passed!"
+  }
+  else
+  {
+    param = "failed!"
+  }
+  
+  output("=parameter", goal(forLoopParamBinding))
+  return goal.param
+}
+
+functionResultBinding = {
+  isa FunctionTest
+  result =  =result
+} 
+
+function element FunctionTest(){
+  slot result = null
+  result = ForLoopTest()
+  output("=result", goal(functionResultBinding))
+  return result
+}
+
+chunk defaultValue1, localDefaultValue1
+
+unattendedAural = {
+  isa audio-event
+}
+
+initialBinding = {
+  isa FunctionCall
+}  
+
+
+function void InlineCall()
+  with aural-location as audio-event
+  retain aural-location as audio-event{
+    
+  
+  
+  return
+}
+
+function void FunctionCall(slot parameter1 = defaultValue1){
+  return
+}
+
+
+}
+

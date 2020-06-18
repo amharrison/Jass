@@ -1,0 +1,106 @@
+namespace countFrom{
+import jactr.declarative.*
+import jactr.procedural.*
+import jactr.retrieval.*
+import jactr.imaginal.*
+import jactr.goal.*
+
+buffers{
+
+  @Override  
+	retrieval {}
+  @Override
+	goal {}
+  @Override
+	imaginal {}
+}
+
+chunktype count-goal {
+  current = null
+  end     = null
+}
+
+chunktype count-from {
+  start = null
+  end   = null
+}
+
+chunktype count-order {
+  first  = null
+  second = null
+}
+
+
+chunktype test {}
+
+production count-line-7{
+  goal{
+    isa count-goal
+    current =  null
+    end     =  null
+  }
+  imaginal{
+    isa count-from
+    start =  =parameterStart
+    end   =  =parameterEnd
+  }
+}{
+  goal{
+    current = =parameterStart
+    end     = =parameterEnd
+  }
+}
+
+production count-line-11{
+  goal{
+    isa count-goal
+    current =  =current
+    end     =  =end
+    current != =end
+  }
+  ?retrieval{
+    state != busy
+  }
+}{
+  +retrieval{
+    isa count-order
+    first =  =current
+  }
+}
+
+production count-line-24{
+  goal{
+    isa count-goal
+    current =  =current
+    end     =  =end
+    current != =end
+  }
+  ?retrieval{
+    state =  = error
+  }
+}{
+  output("I don't remember what's after =current")
+}
+
+production count-line-30{
+  goal{
+    isa count-goal
+    current =  =current
+    end     =  =end
+    current != =end
+  }
+  retrieval{
+    isa count-order
+    first  =  =retrievalFirst
+    second =  =retrievalSecond
+  }
+}{
+  goal{
+    current = =retrievalSecond
+  }
+  output("=current =retrievalFirst")
+}[]
+
+}
+[]
+

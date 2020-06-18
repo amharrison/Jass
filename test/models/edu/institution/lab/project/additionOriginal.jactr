@@ -1,0 +1,142 @@
+namespace additionOriginal {
+import jactr.declarative.*
+import jactr.procedural.*
+import jactr.retrieval.*
+import jactr.imaginal.*
+import jactr.goal.*
+
+module "org.jactr.core.module.declarative.six.DefaultDeclarativeModule6" [
+  "ActivationNoise"          : "0"
+  "BaseLevelConstant"        : "0"
+  "EnablePartialMatching"    : "false"
+  "MaximumDifference"        : "-1"
+  "MaximumSimilarity"        : "0"
+  "MismatchPenalty"          : "1"
+  "PermanentActivationNoise" : "0"]
+module "org.jactr.core.module.procedural.six.DefaultProceduralModule6" [
+  "DefaultProductionFiringTime" : "0.05"
+  "ExpectedUtilityNoise"        : "0"
+  "NumberOfProductionsFired"    : "0" ]
+module "org.jactr.core.module.goal.six.DefaultGoalModule6" []
+module "org.jactr.core.module.retrieval.six.DefaultRetrievalModule6" [
+  "EnableIndexedRetrievals" : "false"
+  "FINSTDurationTime"       : "3.0"
+  "LatencyFactor"           : "1"
+  "NumberOfFINSTs"          : "4"
+  "RetrievalThreshold"      : "0" ]
+
+buffers {
+  @Override
+  goal {first-goal} [
+    "Activation"              : "1"
+    "G"                       : "20"
+    "StrictHarvestingEnabled" : "false" ]
+  @Override  
+  retrieval {} [
+    "Activation"              : "0"
+    "G"                       : "0"
+    "StrictHarvestingEnabled" : "true" ]
+}
+
+chunktype add extends chunk{
+  arg1  = null
+  arg2  = null
+  count = null
+  sum   = null
+}
+
+add first-goal (arg1=5.0, arg2=2.0, count=null, sum=null)
+
+chunktype count-order {
+  first  = null
+  second = null
+}
+
+count-order aa (first=0.0, second=1.0), bb (first=1.0, second=2.0), cc (first=2.0, second=3.0),
+  dd (first=3.0, second=4.0), ee (first=4.0, second=5.0), ff (first=5.0, second=6.0), gg (first=6.0, second=7.0),
+  hh (first=7.0, second=8.0), ii (first=8.0, second=9.0), jj (first=9.0, second=10.0)
+
+production initialize-addition {
+  goal {
+    isa add
+    arg1 =  =num1
+    arg2 =  =num2
+    sum  =  null
+  }
+}{
+  goal {
+    count = 0.0
+    sum   = =num1
+  }
+  +retrieval {
+    isa count-order
+    first =  =num1
+  }
+}
+
+production terminate-addition {
+  goal {
+    isa add
+    arg1  =  =num1
+    arg2  =  =num2
+    count =  =num2
+    sum   =  =answer
+  }
+}{
+  goal {
+    count = null
+  }
+  output ( "=num1 + =num2 is =answer" ) }
+
+production increment-count {
+  goal {
+    isa add
+    sum   =  =sum
+    count =  =count
+  }
+  retrieval {
+    isa count-order
+    first  =  =count
+    second =  =newCount
+  }
+  ?retrieval {
+    state =  free
+  }
+}{
+  goal {
+    count = =newCount
+  }
+  +retrieval {
+    isa count-order
+    first =  =sum
+  }
+  output ( "That was the =newCount finger" )
+  output ( "Will try to retrieval a count-order first =sum " ) }
+
+production increment-sum {
+  goal {
+    isa add
+    sum   =  =sum
+    count =  =count
+    arg2  != =count
+  }
+  retrieval {
+    isa count-order
+    first  =  =sum
+    second =  =newSum
+  }
+  ?retrieval {
+    state =  free
+  }
+}{
+  goal {
+    sum = =newSum
+  }
+  +retrieval {
+    isa count-order
+    first =  =count
+  }
+  output ( "=newSum" )
+  output ( "Will try to retrieval a count-order first =count" ) } 
+  
+}

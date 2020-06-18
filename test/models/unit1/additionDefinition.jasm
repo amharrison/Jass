@@ -1,0 +1,137 @@
+namespace unit1.additionDefinition target unit1.addition{
+import jactr.declarative.*
+import jactr.procedural.*
+import jactr.retrieval.*
+import jactr.imaginal.*
+import jactr.visual.*
+import jactr.aural.*
+import jactr.vocal.*
+import jactr.goal.*
+import jasm.procedural.Goal.*
+
+/**
+ * chunktypes and chunks required by add model
+ */ 
+chunktype count-order {
+  first  = null
+  second = null
+} 
+
+count-order aa (first=0.0, second=1.0), bb (first=1.0, second=2.0), cc (first=2.0, second=3.0),
+  dd (first=3.0, second=4.0), ee (first=4.0, second=5.0), ff (first=5.0, second=6.0), gg (first=6.0, second=7.0),
+  hh (first=7.0, second=8.0), ii (first=8.0, second=9.0), jj (first=9.0, second=10.0)
+
+/*
+ * exit condition for adding
+ */
+countIsNotArg2 = {
+  isa Add
+  count =  =count
+  arg2  != =count
+}
+
+countBinding = {
+  isa Add
+  count =  =variable
+}
+
+retrieveCountOrder = {
+  isa count-order
+  first =  =variable
+}
+
+sumBinding = {
+  isa Add
+  sum =  =variable
+} 
+
+/**
+ * Add two numbers arg1, arg2. This is done by counting
+ * using count retrievals. For each count retrieved and
+ * incremented, we also retrieve the next sum incrementing
+ * that along the way.
+ */  
+function element Add(slot arg1 = 0, slot arg2 = 0)
+{
+  slot count = 0
+  slot sum = 0 
+  sum = arg1
+  
+  while(goal(countIsNotArg2))
+  {
+    request retrieval(retrieveCountOrder), goal(countBinding)
+      -> count = retrieval.second 
+        
+    request retrieval(retrieveCountOrder), goal(sumBinding)
+      -> sum = retrieval.second
+  }
+
+ return sum
+}
+
+priorAdd = {
+  isa Add
+  arg1 =  =arg1
+  arg2 =  =arg2
+}
+
+argBinding = {
+  isa RememberOrAdd
+  arg1 =  =arg1
+  arg2 =  =arg2
+}
+
+sumBinding2 = {
+  isa RememberOrAdd
+  sum =  =variable
+}
+
+/**
+ * Tries to remember a prior addition of arg1 and arg2. If that
+ * fails, fall back to Add
+ */
+function element RememberOrAdd(slot arg1 = 0, slot arg2 = 0){
+  slot sum = 0
+  request retrieval(priorAdd), goal(argBinding)
+    -> sum = retrieval.sum
+    =>{
+    sum = Add(arg1=arg1, arg2=goal.arg2)
+  } 
+   
+  output("Sum =variable", goal(sumBinding2)) 
+  return sum
+}
+
+sumIsNull = {
+  isa CompetitiveRememberOrAdd
+  sum =  null
+}
+
+/**
+ * 
+ */
+function element CompetitiveRememberOrAdd(slot arg1 =0, slot arg2=0){
+  slot sum = null
+  match{
+    case goal(sumIsNull) [0.5] : {
+      sum = Add(arg1=arg1, arg2=arg2)
+    }
+    case goal(sumIsNull) [0.5] : {
+      sum = RememberOrAdd(arg1=arg1, arg2=arg2)
+    }
+    default : {
+      sum = Add(arg1=arg1, arg2=arg2)
+    }
+  }
+  return sum
+}
+
+function void TestRememberOrAdd()
+{
+  CompetitiveRememberOrAdd(arg1=5,arg2=2) 
+  CompetitiveRememberOrAdd(arg1=5, arg2=2)
+  return 
+}
+
+
+}

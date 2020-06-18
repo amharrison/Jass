@@ -1,0 +1,165 @@
+namespace unit1.semanticOriginal {
+import jactr.declarative.*
+import jactr.procedural.*
+import jactr.retrieval.*
+import jactr.imaginal.*
+import jactr.visual.*
+import jactr.aural.*
+import jactr.vocal.*
+import jactr.goal.*
+
+module "org.jactr.core.module.declarative.six.DefaultDeclarativeModule6" [
+  "ActivationNoise"                  : "0"
+  "BaseLevelConstant"                : "0"
+  "ChunkConfiguratorClass"           : "org.jactr.core.module.declarative.basic.chunk.NoOpChunkConfigurator"
+  "ChunkFactoryClass"                : "org.jactr.core.module.declarative.basic.chunk.DefaultChunkFactory"
+  "ChunkNamerClass"                  : "org.jactr.core.module.declarative.basic.chunk.NoOpChunkNamer"
+  "ChunkTypeConfiguratorClass"       : "org.jactr.core.module.declarative.basic.type.NoOpChunkTypeConfigurator"
+  "ChunkTypeFactoryClass"            : "org.jactr.core.module.declarative.basic.type.DefaultChunkTypeFactory"
+  "ChunkTypeNamerClass"              : "org.jactr.core.module.declarative.basic.type.NoOpChunkTypeNamer"
+  "EnablePartialMatching"            : "false"
+  "MaximumDifference"                : "-1"
+  "MaximumSimilarity"                : "0"
+  "MismatchPenalty"                  : "1"
+  "PermanentActivationNoise"         : "0"
+  "SubsymbolicChunkFactoryClass"     : "org.jactr.core.module.declarative.basic.chunk.DefaultSubsymbolicChunkFactory5"
+  "SubsymbolicChunkTypeFactoryClass" : "org.jactr.core.module.declarative.basic.type.DefaultSubsymbolicChunkTypeFactory"
+  "SymbolicChunkFactoryClass"        : "org.jactr.core.module.declarative.basic.chunk.DefaultSymbolicChunkFactory"
+  "SymbolicChunkTypeFactoryClass"    : "org.jactr.core.module.declarative.basic.type.DefaultSymbolicChunkTypeFactory" ]
+
+module "org.jactr.core.module.procedural.six.DefaultProceduralModule6" [
+  "DefaultProductionFiringTime" : "0.05"
+  "ExpectedUtilityNoise"        : "0"
+  "NumberOfProductionsFired"    : "0" ]
+
+module "org.jactr.core.module.goal.six.DefaultGoalModule6" []
+
+module "org.jactr.core.module.retrieval.six.DefaultRetrievalModule6" [
+  "EnableIndexedRetrievals" : "false"
+  "FINSTDurationTime"       : "3.0"
+  "LatencyFactor"           : "0.05"
+  "NumberOfFINSTs"          : "4"
+  "RetrievalThreshold"      : "0" ]
+
+buffers {
+  @Override
+  goal{g2}
+}
+
+
+chunk shark, dangerous, locomotion, swimming, category, fish, salmon, edible, breathe, gills, animal, moves, skin,
+  canary, sings, bird, ostrich, flies, height, tall, wings, flying, yes, no, pending, color
+
+
+chunktype property {
+  object    = null
+  attribute = null
+  value     = null
+}
+
+property p1 (object=shark, attribute=dangerous, value=true), p2 (object=shark, attribute=locomotion, value=swimming),
+  p3 (object=shark, attribute=category, value=fish), p4 (object=salmon, attribute=edible, value=true),
+  p5 (object=salmon, attribute=locomotion, value=swimming), p6 (object=salmon, attribute=category, value=fish),
+  p7 (object=fish, attribute=breathe, value=gills), p8 (object=fish, attribute=locomotion, value=swimming),
+  p9 (object=fish, attribute=category, value=animal), p10 (object=animal, attribute=moves, value=true),
+  p11 (object=animal, attribute=skin, value=true), p12 (object=canary, attribute=color, value=yellow),
+  p13 (object=canary, attribute=sings, value=true), p14 (object=canary, attribute=category, value=bird),
+  p15 (object=ostrich, attribute=flies, value=false), p16 (object=ostrich, attribute=height, value=tall),
+  p17 (object=ostrich, attribute=category, value=bird), p18 (object=bird, attribute=wings, value=true),
+  p19 (object=bird, attribute=locomotion, value=flying), p20 (object=bird, attribute=category, value=animal)
+
+chunktype is-member {
+  object    = null
+  category  = null
+  judgement = null
+}
+
+is-member g1 (object=canary, category=bird, judgement=null), g2 (object=canary, category=animal, judgement=null),
+  g3 (object=canary, category=fish, judgement=null)
+
+production initial-retrieve {
+  goal {
+    isa is-member
+    object    =  =obj
+    category  =  =cat
+    judgement =  null
+  }
+  ?retrieval {
+    state =  free
+  }
+}{
+  goal {
+    judgement = pending
+  }
+  +retrieval {
+    isa property
+    object    =  =obj
+    attribute =  category
+  }
+  output ( "trying to remember something about =obj " ) }
+
+production direct-verify {
+  goal {
+    isa is-member
+    object    =  =obj
+    category  =  =cat
+    judgement =  pending
+  }
+  retrieval {
+    isa property
+    object    =  =obj
+    attribute =  category
+    value     =  =cat
+  }
+}{
+  goal {
+    judgement = yes
+  }
+  output ( "Yes, a =obj is a =cat" )
+  -retrieval {} }
+
+production chain-category {
+  goal {
+    isa is-member
+    object    =  =obj
+    category  =  =cat
+    judgement =  pending
+  }
+  retrieval {
+    isa property
+    object    =  =obj
+    attribute =  category
+    value     =  =val
+    value     != =cat
+  }
+  ?retrieval {
+    state =  free
+  }
+}{
+  goal {
+    object = =val
+  }
+  +retrieval {
+    isa property
+    object    =  =val
+    attribute =  category
+  }
+  output ( "=obj is a =val I wonder if =val is a =cat" )
+  output ( "Im trying to remember something about =val" ) }
+
+production fail {
+  goal {
+    isa is-member
+    object    =  =obj
+    category  =  =cat
+    judgement =  pending
+  }
+  ?retrieval {
+    state =  error
+  }
+}{
+  goal {
+    judgement = no
+  }
+  output ( "No, a =obj is not a =cat" )
+  -retrieval {} } }

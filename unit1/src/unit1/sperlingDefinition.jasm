@@ -1,0 +1,164 @@
+namespace sperling.sperlingDefinition target unit1.sperling{
+import jactr.declarative.*
+import jactr.procedural.*
+import jactr.retrieval.*
+import jactr.imaginal.*
+import jactr.visual.*
+import jactr.aural.*
+import jactr.vocal.*
+import jactr.goal.*
+import jasm.procedural.Goal.*
+
+chunktype Association {
+  one = null
+  two = null 
+}
+
+/*
+ * visual-locations of the expected rows
+ */
+visual-location low(screen-x=-5, screen-y=-5), mid(screen-x=-5, screen-y=0), high(screen-x=-5, screen-y=5)
+
+/*
+ * associative mapping between tone pitch and visual-location
+ */
+Association lowTone(one=100.0, two=low), midTone(one=1000.0, two=mid), highTone(one=10000.0, two=high)
+
+unattendedAural = {
+  isa audio-event
+  kind      =  tone
+  :attended != true
+}
+
+anyAural = {
+  isa audio-event
+}
+
+
+sperlingParamBinding = {
+  isa Sperling
+  parameter =  =parameter
+}
+
+
+unattendedVisual = {
+  isa visual-location
+  kind      =  text
+  nearest   =  =parameter
+  :attended != true
+}
+
+anyVisLoc = {
+  isa visual-location
+}
+
+
+nextUnattendedVisual = {
+  isa visual-location
+  kind      =  text
+  screen-x  > current
+  nearest   =  current
+  :attended != true
+}
+
+sperlingParamNotFailed = {
+  isa Sperling
+  parameter != failed
+}
+
+sperlingParamIsFailed = {
+  isa Sperling
+  parameter =  failed
+}
+
+
+moveVisualAttention = {
+  isa attend-to
+  where =  =visual-location
+}
+moveAttention = {
+  isa attend-to
+  where =  =parameter
+}
+
+mapAssociation = {
+  isa Association
+  one =  =parameter
+}
+
+auralPitch = {
+  isa tone
+  pitch =  =value
+}
+
+retrievalTwo = {
+  isa Association
+  two =  =value
+}
+
+
+function void Sperling(){
+  slot parameter = failed
+
+  /*
+   * wait for tone
+   */
+  do{
+      /* 
+       * search for a tone 
+       */
+    request aural-location(unattendedAural)as audio-event
+      -> parameter = aural-location
+      => {
+      parameter=failed
+    }
+
+      /*
+       * tone was found, attend to it 
+       */
+    if(goal(sperlingParamNotFailed)){
+      request aural(moveAttention), 
+               goal(sperlingParamBinding) as tone
+        -> parameter = aural.pitch
+        => {
+        parameter = failed
+      }
+    }
+  }while(goal(sperlingParamIsFailed))
+    /*
+     * map tone to visual-location
+     */
+  if(goal(sperlingParamNotFailed)){
+    request retrieval(mapAssociation), 
+                 goal(sperlingParamBinding) as Association
+      -> parameter = retrieval.two
+      => {
+      parameter = failed
+    }
+  } 
+
+    /*  
+     * look for all the objects closest to visual-location 
+     */
+  for(visual-location,
+    unattendedVisual, goal(sperlingParamBinding),
+    nextUnattendedVisual, goal(sperlingParamBinding)){
+    request visual(moveVisualAttention), 
+            visual-location(anyVisLoc) as text
+      -> parameter = visual 
+      => {
+      parameter = failed
+    }
+   if(goal(sperlingParamNotFailed)){
+      output("I see =parameter",goal(sperlingParamBinding))
+    }
+  }
+  return
+} 
+ 
+
+
+
+}
+
+
