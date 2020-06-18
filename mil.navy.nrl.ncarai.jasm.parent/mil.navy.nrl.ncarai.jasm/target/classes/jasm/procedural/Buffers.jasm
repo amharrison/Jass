@@ -1,0 +1,24 @@
+namespace jasm.procedural.Buffers target jasm.procedural.bufferDefinitions{
+
+import jactr.declarative.*
+import jactr.procedural.*
+import jactr.retrieval.*
+import jactr.imaginal.*
+import jactr.visual.*
+import jactr.aural.*
+import jactr.vocal.*
+import jactr.motor.*
+import jactr.goal.*
+
+goal writable requests * -> * 
+imaginal writable requests * -> *
+retrieval readable requests * -> *
+motor error requests motor-command -> , motor-clear -> 
+vocal error requests vocal-command -> 
+visual-location readable error requests visual-location -> visual-location
+visual readable error requests move-attention -> visual-object, attend-to -> visual-object,
+ clear -> 
+aural-location readable error requests audio-event -> audio-event 
+aural readable error requests attend-to -> sound, clear -> 
+
+}

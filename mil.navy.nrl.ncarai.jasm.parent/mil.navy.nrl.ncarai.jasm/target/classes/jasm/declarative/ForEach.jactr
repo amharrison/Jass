@@ -1,0 +1,564 @@
+/*
+ * forEachTest evaluates the for-each construct for retrievals. Possible
+ * to apply this to visual and aural as well. forEachRetrieved 
+ * 
+ */
+namespace jasm.declarative.ForEach{
+
+import jactr.declarative.*
+import jactr.procedural.*
+import jactr.retrieval.*
+import jactr.imaginal.*
+import jactr.visual.*
+import jactr.aural.*
+import jactr.vocal.*
+import jactr.meta.*
+import jactr.goal.*
+
+import jasm.declarative.Goal.*
+
+
+
+chunk forEachInstruction, outputChunk
+
+
+stages request-retrieval, actual-retrieval, action-retrieval, action-execution
+
+chunk retrievingElement
+
+/*
+ * for each instruction. next 
+ */
+chunktype ForEach extends Goal{
+  hint           = forEachInstruction
+//  goal-type      = ForEachRetrieved
+  buffer         = "retrieval"
+  current        = null
+  initial        = null
+  requested      = null
+  next           = null
+  action         = null
+  actual-request = null
+  actual-action  = null
+  end-reached    = false
+}
+
+
+/*
+ * forEach flow:
+ * start, retrieve spec for initial. When retrieval error, fire initial spec.
+ * if error, finish. else, set retrieved and retrieve action spec. when error, fire action spec.
+ * In other words, retrieve what you are going to retrieve. Retrieve it. Retrieve what you
+ * are going to do. Do it. Repeat.
+ */
+/*
+ * Start a forEach construct. 
+ * @next subsequent-retrieval-retrieval-forEach
+ */
+production for-BuildSpec-start {
+  goal{
+    isa ForEach
+    initial =  =initialSpec
+    current =  null
+    stage   =  starting
+  }
+  ?retrieval{
+    state != busy
+  }
+}{
+  goal{
+    stage   = request-retrieval
+    current = =initialSpec
+  }
+  +retrieval{
+    =initialSpec
+  }
+}
+
+
+
+
+/*
+ * Build the meta representation with condition chunks which further refine
+ * the request.
+ * 
+ * @previous start-forEach, subsequent-goal-execution-forEach, subsequent-retrieval-retrieval-forEach
+ * @next terminal-retrieval-retrieval-forEach, subsequent-retrieval-retrieval-forEach
+ */
+production for-BuildSpec-subsequent{
+  goal{
+    isa ForEach
+    stage =  request-retrieval
+    end-reached = false
+  }
+  retrieval{
+    isa ListElement
+    item =  =spec
+  }
+}{
+  /*
+   * will copy =slotName = =value
+   */
+  +meta{
+    =spec
+  }
+  +retrieval{
+    isa ListElement
+    prior =  =retrieval
+  }
+  goal{}
+}["Utility":"-1"]
+
+
+production for-BuildSpec-terminal-element{
+  goal{
+    isa ForEach
+    stage =  request-retrieval
+    end-reached = false
+  }
+  retrieval{
+    isa LastListElement
+    item =  =spec
+  }
+}{
+  /*
+   * will copy =slotName = =value
+   */
+  +meta{
+    =spec
+  }
+  goal{
+    end-reached = true
+  }
+}
+
+production for-BuildSpec-terminal-error{
+  goal{
+    isa ForEach
+    stage   =  request-retrieval
+    end-reached = false
+  }
+  ?retrieval{
+    state =  error
+  }
+}{
+  goal{
+    end-reached = true
+  }
+}
+
+/*
+ * When no more conditions can be found, cache the request in
+ * actual-request, and start building the action spec 
+ *  
+ * */
+production for-BuildSpec-terminal{
+  goal{
+    isa ForEach
+    current =  =currentSpec
+    next    =  =nextSpec
+    action  =  =actionSpec
+    stage   =  request-retrieval
+    end-reached = true
+  }
+  meta{
+    =meta
+  }
+}{
+  +meta{
+    =actionSpec
+  }
+  goal{
+    actual-request = =meta
+    stage          = action-retrieval
+    current        = =nextSpec
+  }
+}
+
+
+/*
+ * build up the action request using condition chunks
+ *  */
+production for-BuildAction-start{
+  goal{
+    isa ForEach
+    stage =  action-retrieval
+    actual-action = null
+  }
+  meta{
+    =meta
+  }
+}{
+  goal{
+    actual-action = =meta
+  }
+  -meta{}
+}
+
+
+production for-ExecuteAction-completed{
+  goal{
+    isa ForEach
+    stage   =  action-execution
+    current =  =current
+  }
+  ?retrieval{
+    state != busy
+  }
+}{
+  goal{
+    stage = request-retrieval
+    end-reached = false
+  }
+  +retrieval{
+    =current
+  }
+}
+
+
+/*
+ * cache the action 
+ */
+production for-ActualRequest-retrieval{
+  goal{
+    isa ForEach
+    stage          =  action-retrieval
+    buffer         =  "retrieval"
+    actual-request =  =requestSpec
+    requested      =  =requested
+    actual-action != null
+  }
+}{
+  goal{
+    actual-request = null // clear out 
+    stage          = actual-request
+  }
+  +retrieval{
+    =requestSpec
+  }
+}
+
+production for-ActualRequest-retrieval-null{
+  goal{
+    isa ForEach
+    stage          =  action-retrieval
+    buffer         =  "retrieval"
+    actual-request =  =requestSpec
+    requested      =  null
+    parameter      =  =requested
+    actual-action != null
+  }
+}{
+  goal{
+    actual-request = null // clear out 
+    stage          = actual-request
+  }
+  +retrieval{
+    =requestSpec
+  }
+}
+
+production for-ActualRequest-retrieval-null-null{
+  goal{
+    isa ForEach
+    stage          =  action-retrieval
+    buffer         =  "retrieval"
+    actual-request =  =requestSpec
+    requested      =  null
+    parameter      =  null
+    actual-action != null
+  }
+}{
+  goal{
+    actual-request = null // clear out 
+    stage          = actual-request
+  }
+  +retrieval{
+    =requestSpec
+  }
+}
+
+
+
+/*
+ * Could not retrieve anything, we've reached the end of the forEach
+ * 
+ * @previous terminal-retrieval-retrieval-forEach
+ * @next goal-completed-no-return
+ */
+production for-ActualRequest-retrieval-error{
+  goal{
+    isa ForEach
+    stage  =  actual-request
+    action =  =action
+    buffer =  "retrieval"
+  }
+  ?retrieval{
+    state =  error
+  }
+}{
+  // we could do more slot nulling for merging here
+  goal{
+    actual-action = null
+    stage         = completed
+  }
+}
+
+production for-ActualRequest-retrieval-success{
+  goal{
+    isa ForEach
+    stage         =  actual-request
+    actual-action =  =actionSpec
+    buffer        =  "retrieval"
+  }
+  retrieval{
+    =retrieval
+  }
+}{
+  -goal{
+    requested     = =retrieval
+    stage         = action-execution
+    actual-action = null // clean up
+  }
+  +goal{
+    =actionSpec
+    parent    =  =goal
+    parameter =  =retrieval
+  }
+  retrieval{} // touch
+}
+
+
+/*
+ * Perceptual versions
+ */
+/*
+ * cache the action 
+ */
+production for-ActualRequest-aural-location{
+  goal{
+    isa ForEach
+    stage          =  action-retrieval
+    buffer         =  "aural-location"
+    actual-request =  =requestSpec
+    requested      =  =requested
+    actual-action != null
+  }
+}{
+  goal{
+    actual-request = null // clear out 
+    stage          = actual-request
+  }
+  +aural-location{
+    =requestSpec
+  }
+}
+
+production for-ActualRequest-aural-location-null{
+  goal{
+    isa ForEach
+    stage          =  action-retrieval
+    buffer         =  "aural-location"
+    actual-request =  =requestSpec
+    requested      =  null
+    parameter      =  =requested
+    actual-action != null
+  }
+}{
+  goal{
+    actual-request = null // clear out 
+    stage          = actual-request
+  }
+  +aural-location{
+    =requestSpec
+  }
+}
+
+production for-ActualRequest-aural-location-null-null{
+  goal{
+    isa ForEach
+    stage          =  action-retrieval
+    buffer         =  "aural-location"
+    actual-request =  =requestSpec
+    requested      =  null
+    parameter      =  null
+    actual-action != null
+  }
+}{
+  goal{
+    actual-request = null // clear out 
+    stage          = actual-request
+  }
+  +aural-location{
+    =requestSpec
+  }
+}
+
+
+/*
+ * Could not retrieve anything, we've reached the end of the forEach
+ * 
+ * @previous terminal-retrieval-retrieval-forEach
+ * @next goal-completed-no-return
+ */
+production for-ActualRequest-aural-location-error{
+  goal{
+    isa ForEach
+    stage  =  actual-request
+    action =  =action
+    buffer =  "aural-location"
+  }
+  ?aural-location{
+    state =  error
+  }
+}{
+  // we could do more slot nulling for merging here
+  goal{
+    actual-action = null
+    stage         = completed
+  }
+}
+
+production for-ActualRequest-aural-location-success{
+  goal{
+    isa ForEach
+    stage         =  actual-request
+    actual-action =  =actionSpec
+    buffer        =  "aural-location"
+  }
+  aural-location{
+    =aural-location
+  }
+}{
+  -goal{
+    requested     = =aural-location
+    stage         = action-execution
+    actual-action = null // clean up
+  }
+  +goal{
+    =actionSpec
+    parent    =  =goal
+    parameter =  =aural-location
+  }
+  aural-location{} // touch
+}
+
+
+production for-ActualRequest-visual-location{
+  goal{
+    isa ForEach
+    stage          =  action-retrieval
+    buffer         =  "visual-location"
+    actual-request =  =requestSpec
+    requested      =  =requested
+    actual-action != null
+  }
+}{
+  goal{
+    actual-request = null // clear out 
+    stage          = actual-request
+  }
+
+  +visual-location{
+    =requestSpec
+  }
+}
+
+production for-ActualRequest-visual-location-null{
+  goal{
+    isa ForEach
+    stage          =  action-retrieval
+    buffer         =  "visual-location"
+    actual-request =  =requestSpec
+    requested      =  null
+    parameter      =  =requested
+    actual-action != null
+  }
+}{
+  goal{
+    actual-request = null // clear out 
+    stage          = actual-request
+  }
+  +visual-location{
+    =requestSpec
+  }
+}
+
+production for-ActualRequest-visual-location-null-null{
+  goal{
+    isa ForEach
+    stage          =  action-retrieval
+    buffer         =  "visual-location"
+    actual-request =  =requestSpec
+    requested      =  null
+    parameter      =  null
+    actual-action != null
+  }
+}{
+  goal{
+    actual-request = null // clear out 
+    stage          = actual-request
+  }
+  +visual-location{
+    =requestSpec
+  }
+}
+
+
+/*
+ * Could not retrieve anything, we've reached the end of the forEach
+ * 
+ * @previous terminal-retrieval-retrieval-forEach
+ * @next goal-completed-no-return
+ */
+production for-ActualRequest-visual-location-error{
+  goal{
+    isa ForEach
+    stage  =  actual-request
+    action =  =action
+    buffer =  "visual-location"
+  }
+  ?visual-location{
+    state =  error
+  }
+}{
+  // we could do more slot nulling for merging here
+  goal{
+    actual-action = null
+    stage         = completed
+  }
+}
+
+production for-ActualRequest-visual-location-success{
+  goal{
+    isa ForEach
+    stage         =  actual-request
+    actual-action =  =actionSpec
+    buffer        =  "visual-location"
+  }
+  visual-location{
+    =visual-location
+  }
+}{
+  -goal{
+    requested     = =visual-location
+    stage         = action-execution
+    actual-action = null // clean up
+  }
+  +goal{
+    =actionSpec
+    parent    =  =goal
+    parameter =  =visual-location
+  }
+  visual-location{} // touch
+}
+
+
+
+
+
+
+}[
+  "EnablePersistentExecution" : false
+  "EnableUnusedCycleSkipping" : true
+]

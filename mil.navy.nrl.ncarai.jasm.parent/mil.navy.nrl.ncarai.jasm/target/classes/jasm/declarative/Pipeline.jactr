@@ -1,0 +1,306 @@
+/*
+ * test of mapping pipeline functions.
+ * This will test map_retrieve, map_aural, map_visual, and map_association.
+ * 
+ * pipeline goals merely take the return result after execution and stashes it in
+ * the parameter slot. Subsequent pipeline goals can use that value or overwrite it
+ * 
+ * map_aural and map_visual ignore the current pipeline value and merely specify
+ * which slot is assigned to the result via : slotName = =value.
+ * 
+ * map_retrieval retrieves the current pipeline value and merely specifies which
+ * slot is assigned to the result via : slotName = =value
+ * 
+ * map_association takes the current pipeline value, and uses it as a retrieval
+ * spec for an association(current), the spec then defines which slot is assigned
+ * to the result from the retrieval buffer.
+ * 
+ */
+ namespace jasm.declarative.Pipeline{
+
+import jactr.declarative.*
+import jactr.procedural.*
+import jactr.retrieval.*
+import jactr.imaginal.*
+import jactr.visual.*
+import jactr.aural.*
+import jactr.meta.*
+import jactr.goal.*
+import jasm.declarative.Goal.*
+
+module "org.jactr.core.module.declarative.six.DefaultDeclarativeModule6" [
+  "ActivationNoise"          : "0"
+  "BaseLevelConstant"        : "0"
+  "EnablePartialMatching"    : "false"
+  "MaximumDifference"        : "-1"
+  "MaximumSimilarity"        : "0"
+  "MismatchPenalty"          : "1"
+  "PermanentActivationNoise" : "0"]
+module "org.jactr.core.module.procedural.six.DefaultProceduralModule6" [
+  "DefaultProductionFiringTime" : "0.05"
+  "ExpectedUtilityNoise"        : "0"
+  "NumberOfProductionsFired"    : "0" ]
+module "org.jactr.core.module.goal.six.DefaultGoalModule6" []
+module "org.jactr.core.module.retrieval.six.DefaultRetrievalModule6" [
+  "EnableIndexedRetrievals" : "false"
+  "FINSTDurationTime"       : "3.0"
+  "LatencyFactor"           : "1"
+  "NumberOfFINSTs"          : "4"
+  "RetrievalThreshold"      : "0" ]
+module "org.jactr.core.module.meta.MetaModule"[]
+module "org.jactr.modules.pm.aural.six.DefaultAuralModule6"[]
+module "org.jactr.modules.pm.visual.six.DefaultVisualModule6"[]
+
+/* 
+ * common buffers
+ */
+buffers {
+}
+
+
+chunktype PipelineElement {
+  action = null
+  prior  = null
+}
+
+chunktype LastPipelineElement extends PipelineElement {}
+
+chunk pipeline-hint
+chunktype Pipeline extends Goal{
+  hint        = pipeline-hint
+  initial     = null // pipeline-element
+  end-reached = false // have we read the last element?
+}
+
+
+/************************************
+ * pipeline productions
+ * pipelining works like this: initial is used to retrieve the first
+ * element in pipeline-element list. Each represents a discrete action to take.
+ * 
+ * Basically, it retrieves what it is going to do, does it, stashes the result
+ * in parameter.
+ *   
+ ************************************/
+production pipeline-start{
+  goal{
+    isa Pipeline
+    hint    =  pipeline-hint
+    initial =  =initial
+    stage   =  starting
+  }
+  ?retrieval{
+    state != busy
+  }
+}{
+  +retrieval{
+    =initial
+  }
+  goal{
+    stage = goal-retrieval
+  }
+}
+
+production pipeline-stop{
+  goal{
+    isa Pipeline
+    hint      =  pipeline-hint
+    stage     =  goal-retrieval
+    parameter =  =parameter
+  }
+  ?retrieval{
+    state =  error
+  }
+}{
+  goal{
+    stage  = completed
+    return = =parameter
+  }
+}
+
+production pipeline-stop-null{
+  goal{
+    isa Pipeline
+    hint      =  pipeline-hint
+    stage     =  goal-retrieval
+    parameter =  null
+  }
+  ?retrieval{
+    state =  error
+  }
+}{
+  goal{
+    stage = completed
+  }
+}
+
+
+production pipeline-start-action{
+  goal{
+    isa Pipeline
+    hint      =  pipeline-hint
+    stage     =  goal-retrieval
+    parameter =  =parameter
+  }
+  retrieval{
+    isa PipelineElement
+    action =  =action
+  }
+}{
+  goal{
+    stage   = goal-execution
+    return  = null
+    initial = =retrieval
+  }
+  +goal{
+    =action
+    parent    =  =goal
+    parameter =  =parameter
+  }
+}["Utility" : -1]
+
+production pipeline-start-action-null{
+  goal{
+    isa Pipeline
+    hint      =  pipeline-hint
+    stage     =  goal-retrieval
+    parameter =  null
+  }
+  retrieval{
+    isa PipelineElement
+    action =  =action
+  }
+}{
+  goal{
+    stage   = goal-execution
+    return  = null
+    initial = =retrieval
+  }
+  +goal{
+    =action
+    parent =  =goal
+  }
+}["Utility" : -1]
+
+
+production pipeline-start-end-action{
+  goal{
+    isa Pipeline
+    hint      =  pipeline-hint
+    stage     =  goal-retrieval
+    parameter =  =parameter
+  }
+  retrieval{
+    isa LastPipelineElement
+    action =  =action
+  }
+}{
+  goal{
+    stage       = goal-execution
+    return      = null
+    initial     = =retrieval
+    end-reached = true
+  }
+  +goal{
+    =action
+    parent    =  =goal
+    parameter =  =parameter
+  }
+}
+
+production pipeline-start-action-end-null{
+  goal{
+    isa Pipeline
+    hint      =  pipeline-hint
+    stage     =  goal-retrieval
+    parameter =  null
+  }
+  retrieval{
+    isa LastPipelineElement
+    action =  =action
+  }
+}{
+  goal{
+    end-reached = true
+    stage       = goal-execution
+    return      = null
+    initial     = =retrieval
+  }
+  +goal{
+    =action
+    parent =  =goal
+  }
+}
+
+
+production pipeline-complete-end-action{
+  goal{
+    isa Pipeline
+    hint        =  pipeline-hint
+    stage       =  goal-execution
+    return      =  =return
+    end-reached =  true
+  }
+//  ?retrieval{
+//    state != busy
+//  }
+}{
+  goal{
+    parameter = =return
+    return    = =return
+    stage     = completed
+  }
+}
+
+
+production pipeline-complete-action{
+  goal{
+    isa Pipeline
+    hint        =  pipeline-hint
+    stage       =  goal-execution
+    return      =  =return
+    initial     =  =prior
+    end-reached =  false
+  }
+  ?retrieval{
+    state != busy
+  }
+}{
+  goal{
+    parameter = =return
+    return    = null
+    stage     = goal-retrieval
+  }
+  +retrieval{
+    isa PipelineElement
+    prior =  =prior
+  }
+}
+
+production pipeline-complete-action-null{
+  goal{
+    isa Pipeline
+    hint        =  pipeline-hint
+    stage       =  goal-execution
+    return      =  null
+    initial     =  =prior
+    end-reached =  false
+  }
+  ?retrieval{
+    state != busy
+  }
+}{
+  goal{
+    parameter = null
+    return    = null
+    stage     = goal-retrieval
+  }
+  +retrieval{
+    isa PipelineElement
+    prior =  =prior
+  }
+}
+
+
+
+}

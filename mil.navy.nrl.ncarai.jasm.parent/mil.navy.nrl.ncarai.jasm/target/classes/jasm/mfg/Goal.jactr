@@ -1,0 +1,97 @@
+/*
+ * 
+ * 
+ */
+namespace jasm.mfg.Goal{
+
+import jactr.declarative.*
+import jactr.procedural.*
+import jactr.retrieval.*
+import jactr.imaginal.*
+import jactr.visual.*
+import jactr.aural.*
+import jactr.meta.*
+import jactr.goal.*
+
+module "org.jactr.core.module.declarative.six.DefaultDeclarativeModule6" [
+  "ActivationNoise"          : "0"
+  "BaseLevelConstant"        : "0"
+  "EnablePartialMatching"    : "false"
+  "MaximumDifference"        : "-1"
+  "MaximumSimilarity"        : "0"
+  "MismatchPenalty"          : "1"
+  "PermanentActivationNoise" : "0"]
+module "org.jactr.core.module.procedural.six.DefaultProceduralModule6" [
+  "DefaultProductionFiringTime" : "0.05"
+  "ExpectedUtilityNoise"        : "0"
+  "NumberOfProductionsFired"    : "0" ]
+module "org.jactr.core.module.goal.six.DefaultGoalModule6" []
+module "org.jactr.core.module.retrieval.six.DefaultRetrievalModule6" [
+  "EnableIndexedRetrievals" : "false"
+  "FINSTDurationTime"       : "3.0"
+  "LatencyFactor"           : "1"
+  "NumberOfFINSTs"          : "4"
+  "RetrievalThreshold"      : "0" ]
+module "org.jactr.core.module.meta.MetaModule"[]
+module "org.jactr.modules.pm.aural.six.DefaultAuralModule6"[]
+module "org.jactr.modules.pm.visual.six.DefaultVisualModule6"[]
+
+/* 
+ * common buffers
+ */
+buffers {
+}
+
+chunktype Goal {
+  stage     = starting //
+  return    = null // return value
+  parent    = null // parent goal
+}
+
+
+chunktype stages extends chunk {}
+
+
+stages starting, completed, failed
+
+
+/************************************
+ * goal general productions
+ *  
+ ************************************/
+production goal-completed-no-return{
+  goal{
+    isa Goal
+    stage  =  completed
+    return =  null
+    parent =  =parent
+  }
+}{
+  goal{
+    parent = null
+  }
+  +goal{
+    =parent
+  }
+}
+
+production goal-completed-return{
+  goal{
+    isa Goal
+    stage  =  completed
+    return =  =return
+    parent =  =parent
+  }
+}{
+  goal{
+    parent = null
+    return = null
+  }
+  +goal{
+    =parent
+    return =  =return
+  }
+}
+
+
+}

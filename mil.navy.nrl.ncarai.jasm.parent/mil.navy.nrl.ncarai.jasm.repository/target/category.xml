@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature id="mil.navy.nrl.ncarai.jasm.feature" version="0.0.0">
+      <category name="org.jactr"/>
+   </feature>
+   <feature id="mil.navy.nrl.ncarai.jasm.feature.source" version="0.0.0">
+      <category name="org.jactr.source"/>
+   </feature>
+   <category-def name="org.jactr" label="jACT-R Tools and Sources"/>
+   <category-def name="org.jactr.source" label="jACT-R Tools and Sources"/>
+</site>

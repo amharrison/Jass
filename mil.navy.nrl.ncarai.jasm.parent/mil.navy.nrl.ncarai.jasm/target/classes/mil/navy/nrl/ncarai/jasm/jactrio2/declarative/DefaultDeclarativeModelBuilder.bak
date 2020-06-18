@@ -1,0 +1,607 @@
+package mil.navy.nrl.ncarai.jasm.jactrio2.declarative
+
+import java.util.Collection
+import java.util.HashMap
+import java.util.HashSet
+import java.util.List
+import java.util.Map
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.function.Consumer
+import javax.inject.Inject
+import mil.navy.nrl.ncarai.jasm.jactrio2.IModelBuilder
+import mil.navy.nrl.ncarai.jasm.program.Block
+import mil.navy.nrl.ncarai.jasm.program.ForLoopStatement
+import mil.navy.nrl.ncarai.jasm.program.Function
+import mil.navy.nrl.ncarai.jasm.program.IfThenElseStatement
+import mil.navy.nrl.ncarai.jasm.program.Instruction
+import mil.navy.nrl.ncarai.jasm.program.PackageDef
+import mil.navy.nrl.ncarai.jasm.program.Pattern
+import mil.navy.nrl.ncarai.jasm.program.Program
+import mil.navy.nrl.ncarai.jasm.program.RepeatUntilStatement
+import mil.navy.nrl.ncarai.jasm.program.RequestStatement
+import mil.navy.nrl.ncarai.jasm.program.ReturnStatement
+import org.eclipse.emf.ecore.EObject
+import org.eclipse.emf.ecore.util.EcoreUtil
+import org.eclipse.xtext.nodemodel.util.NodeModelUtils
+import org.jactr.io2.jactr.comment.CommentUtilities
+import org.jactr.io2.jactr.modelFragment.ChunkType
+import org.jactr.io2.jactr.modelFragment.Chunks
+import org.jactr.io2.jactr.modelFragment.Condition
+import org.jactr.io2.jactr.modelFragment.ConditionalSlot
+import org.jactr.io2.jactr.modelFragment.ModelFragment
+import org.jactr.io2.jactr.modelFragment.ModelFragmentFactory
+import org.jactr.io2.jactr.validation.ModelFragmentUtil
+
+class DefaultDeclarativeModelBuilder implements IModelBuilder {
+
+  @Inject ModelFragmentUtil _utilities
+//  
+  /*
+   * the fragment we are building
+   */
+  ModelFragment _jasmFragment = null
+  ModelFragment _jasmLoader = null
+
+  Map<String, EObject> _chunkTypeSymbols;
+
+  override build(Program program) {
+    _jasmFragment = ModelFragmentFactory.eINSTANCE.createModelFragment
+    _jasmLoader = ModelFragmentFactory.eINSTANCE.createModelFragment
+    _jasmLoader.package = ModelFragmentFactory.eINSTANCE.createPackageDeclaration
+    _jasmLoader.package.name = program.package.name
+
+    _jasmLoader.package.imports.addAll(getDefaultImports())
+    _jasmLoader.package.modules.addAll(defaultModules)
+
+    _chunkTypeSymbols = _utilities.resolveSymbolTable(program.eResource, _utilities.chunkTypeSymbolTable(program))
+
+    _jasmFragment.package = program.package.build
+
+    val rtn = newArrayList
+    rtn.add(_jasmLoader)
+    rtn.add(_jasmFragment)
+
+    rtn
+  }
+
+  def getDefaultImports() {
+    val rtn = newArrayList
+    val defaults = #[
+      'jactr.declarative.*',
+      'jactr.procedural.*',
+      'jactr.retrieval.*',
+      'jactr.imaginal.*',
+      'jactr.visual.*',
+      'jactr.aural.*',
+      'jactr.vocal.*',
+      'jactr.goal.*',
+      'jactr.meta.*',
+      'jasm.Goal.*',
+      'jasm.Pipeline.*',
+      'jasm.ForEach.*',
+      'jasm.RepeatUntil.*',
+      'jasm.MapRetrieval.*',
+      'jasm.MapAural.*',
+      'jasm.MapAuralLocation.*',
+      'jasm.MapVisual.*',
+      'jasm.MapVisualLocation.*'
+    ]
+    defaults.forEach([ str |
+      val imp = ModelFragmentFactory.eINSTANCE.createImport
+      imp.importedNamespace = str
+      rtn.add(imp)
+    ])
+    rtn
+  }
+
+  def copyChunkTypes(Collection<ChunkType> chunkTypes) {
+    val rtn = newArrayList
+    chunkTypes.forEach([ chunkType |
+      val copy = EcoreUtil.copy(chunkType)
+      rtn.add(copy)
+      _chunkTypeSymbols.put(chunkType.name, copy)
+    ])
+    rtn
+  }
+
+  def getDefaultModules() {
+    val rtn = newArrayList
+    val defaults = #[
+      'org.jactr.core.module.declarative.six.DefaultDeclarativeModule6',
+      'org.jactr.core.module.procedural.six.DefaultProceduralModule6',
+      'org.jactr.core.module.goal.six.DefaultGoalModule6',
+      'org.jactr.core.module.retrieval.six.DefaultRetrievalModule6',
+      'org.jactr.core.module.meta.MetaModule',
+      'org.jactr.modules.pm.aural.six.DefaultAuralModule6',
+      'org.jactr.modules.pm.visual.six.DefaultVisualModule6'
+    ]
+    defaults.forEach([ str |
+      val imp = ModelFragmentFactory.eINSTANCE.createModelModule
+      imp.moduleClass = str
+      rtn.add(imp)
+    ])
+    rtn
+  }
+
+  def build(PackageDef pdef) {
+    val rtn = ModelFragmentFactory.eINSTANCE.createPackageDeclaration
+    rtn.name = pdef.name + "Chunks"
+
+    rtn.imports.addAll(getDefaultImports())
+//    rtn.modules.addAll(getDefaultModules())
+    rtn.elements.addAll(copyChunkTypes(pdef.chunkTypes))
+    pdef.patterns.forEach [ pattern |
+      rtn.elements.addAll(build(pattern))
+    ]
+
+    val allGoalLists = newArrayList
+    pdef.functions.forEach [ function |
+      function.buildInstruction([chunk|rtn.elements.add(chunk)], [chunk|allGoalLists.add(chunk)])
+    ]
+
+    _jasmLoader.package.elements.add(parameters(allGoalLists))
+    val imp = ModelFragmentFactory.eINSTANCE.createImport
+    imp.importedNamespace = rtn.name + ".*"
+    _jasmLoader.package.imports.add(imp)
+
+    rtn
+  }
+
+  def parameters(List<Chunks> goalListChunks) {
+    val rtn = ModelFragmentFactory.eINSTANCE.createParameters
+    goalListChunks.forEach [ chunks |
+      chunks.chunks.forEach [ chunk |
+        rtn.elements.add(chunk.name)
+      ]
+    ]
+    rtn.parameters = ModelFragmentFactory.eINSTANCE.createParametersBlock
+    var parameter = ModelFragmentFactory.eINSTANCE.createParameter
+    parameter.name = "CreationTime"
+    parameter.value = ModelFragmentFactory.eINSTANCE.createValue
+    parameter.value.string = "-10"
+    rtn.parameters.parameter.add(parameter)
+
+    parameter = ModelFragmentFactory.eINSTANCE.createParameter
+    parameter.name = "ReferenceCount"
+    parameter.value = ModelFragmentFactory.eINSTANCE.createValue
+    parameter.value.string = "10"
+    rtn.parameters.parameter.add(parameter)
+
+    CommentUtilities.comment(rtn, '''
+This parameters block is provided for easy modifying of base levels
+for the list of instructions.     
+    ''')
+
+    rtn
+  }
+
+  def toSimpleSlot(ConditionalSlot cSlot) {
+    val slot = ModelFragmentFactory.eINSTANCE.createSimpleSlot
+    if(cSlot.condition !== Condition.EQUALS) throw new IllegalArgumentException("Condition must be equals")
+    slot.name = cSlot.name
+    slot.value = cSlot.value
+    slot
+  }
+
+  def toConditionChunk(ConditionalSlot cSlot) {
+    val rtn = ModelFragmentFactory.eINSTANCE.createChunkDef
+    var cond = "equals"
+    switch (cSlot.condition) {
+      case NOT: cond = "not-equals"
+      case GT: cond = "greater-than"
+      case GTE: cond = "greater-than-equals"
+      case LT: cond = "less-than"
+      case LTE: cond = "less-than-equals"
+      case EQUALS: cond = "equals"
+    }
+
+    var slot = ModelFragmentFactory.eINSTANCE.createSimpleSlot
+    slot.name = "slot"
+    slot.value = ModelFragmentFactory.eINSTANCE.createValue
+    slot.value.string = cSlot.name
+    rtn.slots.add(slot)
+
+    slot = ModelFragmentFactory.eINSTANCE.createSimpleSlot
+    slot.name = "condition"
+    slot.value = ModelFragmentFactory.eINSTANCE.createValue
+    slot.value.name = cond
+    rtn.slots.add(slot)
+
+    slot = ModelFragmentFactory.eINSTANCE.createSimpleSlot
+    slot.name = "value"
+    slot.value = EcoreUtil.copy(cSlot.value)
+    rtn.slots.add(slot)
+
+    rtn
+  }
+
+  def ChunkType getChunkType(String name) {
+    var ct = _chunkTypeSymbols.get(name) as ChunkType
+
+    ct
+  }
+
+  def chunks() {
+    ModelFragmentFactory.eINSTANCE.createChunks
+  }
+
+  def chunkDef() {
+    ModelFragmentFactory.eINSTANCE.createChunkDef
+  }
+
+  def simpleSlot(String name) {
+    var slot = ModelFragmentFactory.eINSTANCE.createSimpleSlot
+    slot.name = name
+    slot.value = ModelFragmentFactory.eINSTANCE.createValue
+    slot
+  }
+
+  def dispatch String buildInstruction(Instruction instr, Consumer<Chunks> acceptor, Consumer<Chunks> blockAcceptor) {
+    if (instr.function !== null)
+      return instr.function.name
+    return null as String
+  }
+
+  def dispatch String buildInstruction(ReturnStatement instr, Consumer<Chunks> acceptor, Consumer<Chunks> blockAcceptor) {
+    var name = "return_Line" + instr.lineNumber
+    val chunks = chunks
+    chunks.type = getChunkType("Goal")
+    val def = chunkDef
+    def.name = name
+    chunks.chunks.add(def)
+
+    var slot = simpleSlot("stage")
+    slot.value.name = "completed"
+    def.slots.add(slot)
+
+    if (instr.name !== null) {
+      slot = simpleSlot("return")
+      slot.value.name = instr.name
+      def.slots.add(slot)
+    }
+
+    acceptor.accept(chunks)
+    name
+  }
+
+  def dispatch String buildInstruction(ForLoopStatement instr, Consumer<Chunks> acceptor, Consumer<Chunks> blockAcceptor) {
+    var name = "for_Line" + instr.lineNumber
+    val chunks = chunks
+    chunks.type = getChunkType("ForEach")
+    val def = chunkDef
+    def.name = name
+    chunks.chunks.add(def)
+
+    // so for appears before its block
+    acceptor.accept(chunks)
+
+    var slot = simpleSlot("initial")
+    slot.value.name = instr.initial.name + "LI0"
+    def.slots.add(slot)
+
+    slot = simpleSlot("buffer")
+    slot.value.string = instr.buffer.name
+    def.slots.add(slot)
+
+    slot = simpleSlot("next")
+    slot.value.name = instr.subsequent.name + "LI0"
+    def.slots.add(slot)
+
+    slot = simpleSlot("action")
+    slot.value.name = instr.block.buildInstruction(acceptor, blockAcceptor)
+    def.slots.add(slot)
+
+    name
+  }
+
+  def dispatch String buildInstruction(RequestStatement instr, Consumer<Chunks> acceptor, Consumer<Chunks> blockAcceptor) {
+    var name = "request_Line" + instr.lineNumber
+    val chunks = chunks
+    chunks.type = getChunkType("BufferRequest")
+    val def = chunkDef
+    def.name = name
+    chunks.chunks.add(def)
+
+    // request(pattern) -> mapping(pattern) => handler(function)
+    var slot = simpleSlot("request")
+    slot.value.name = instr.pattern.buffer.name + "LI0"
+    def.slots.add(slot)
+
+    slot = simpleSlot("buffer")
+    slot.value.string = instr.pattern.buffer.name
+    def.slots.add(slot)
+
+//    if (instr.mapping.pattern !== null) {
+//      slot = simpleSlot("mapping")
+//      slot.value.name = instr.mapping.pattern.name + "Base"
+//      def.slots.add(slot)
+//    }
+    /*
+     * need to update to handle block instead of handler
+     */
+    slot = simpleSlot("handler")
+    slot.value.name = instr.handler.block.buildInstruction(acceptor, blockAcceptor)
+    def.slots.add(slot)
+
+    acceptor.accept(chunks)
+    throw new RuntimeException("Broken, MapRetrieval.jactr has yet to be updated to handle blocks")
+//    name
+  }
+
+  def dispatch String buildInstruction(IfThenElseStatement ite, Consumer<Chunks> acceptor, Consumer<Chunks> blockAcceptor) {
+    var name = "ifThen_Line" + ite.lineNumber
+    val chunks = chunks
+    chunks.type = getChunkType("IfThenElse")
+    val def = chunkDef
+    def.name = name
+    chunks.chunks.add(def)
+
+    // so that ifThen chunk is before its then/else blocks
+    acceptor.accept(chunks)
+
+    throw new IllegalStateException("No longer supported due to multiple conditions")
+//
+//    var slot = simpleSlot("condition")
+//    slot.value.name = ite.patterns.buffer.name + "LI0"
+//    def.slots.add(slot)
+//
+//    slot = simpleSlot("then")
+//    slot.value.name = ite.thenBlock.buildInstruction(acceptor, blockAcceptor)
+//    def.slots.add(slot)
+//
+//    if (ite.elseBlock !== null) {
+//      slot = simpleSlot("else")
+//      slot.value.name = ite.elseBlock.buildInstruction(acceptor, blockAcceptor)
+//      def.slots.add(slot)
+//    }
+//
+//    name
+  }
+
+  def dispatch String buildInstruction(RepeatUntilStatement repeat, Consumer<Chunks> acceptor, Consumer<Chunks> blockAcceptor) {
+    val conditionName = repeat.until.patterns.last.buffer.name + "LI0"
+    val name = "repeatUntil_Line" + repeat.lineNumber
+
+    val type = getChunkType("RepeatUntil")
+    val chunks = chunks
+    chunks.type = type
+    val def = chunkDef
+    def.name = name
+    chunks.chunks.add(def)
+
+    // so repeat appears before block
+    acceptor.accept(chunks)
+
+    val blockName = repeat.repeat.block.buildInstruction(acceptor, blockAcceptor)
+    var slot = simpleSlot("block")
+    slot.value.name = blockName
+    def.slots.add(slot)
+
+    slot = simpleSlot("condition")
+    slot.value.name = conditionName
+    def.slots.add(slot)
+
+    name
+  }
+
+  /*
+   * creates necessary chunks to represent function, calling acceptor,
+   * and returns the name of the entry point chunk
+   */
+  def dispatch String buildInstruction(Function function, Consumer<Chunks> acceptor, Consumer<Chunks> blockAcceptor) {
+    var type = getChunkType("Pipeline")
+    val chunks = chunks
+    chunks.type = type
+
+    val def = chunkDef
+    def.name = function.name
+    chunks.chunks.add(def)
+
+    // so that the function chunk appears before the block
+    acceptor.accept(chunks)
+
+    var slot = simpleSlot("initial")
+    slot.value = ModelFragmentFactory.eINSTANCE.createValue
+//    slot.value.name = function.block.buildInstruction(acceptor, blockAcceptor) as String
+    def.slots.add(slot)
+
+    CommentUtilities.comment(chunks, '\n' + function.textOf)
+
+    blockAcceptor.accept(chunks)
+    function.name
+  }
+
+  def dispatch String buildInstruction(Block block, Consumer<Chunks> acceptor, Consumer<Chunks> blockAcceptor) {
+    var firstName = null as String
+    var lastName = null as String
+    val isNamedBlock = block.eContainer instanceof Function
+
+    for (i : 0 .. block.instructions.size() - 1) {
+      val isFirst = i === 0
+      val isLast = i == block.instructions.size() - 1
+
+      val inst = block.instructions.get(i)
+
+      var type = getChunkType("PipelineElement")
+      if (isLast)
+        type = getChunkType("LastPipelineElement")
+
+      val chunks = chunks
+      chunks.type = type
+
+      val chunkDef = chunkDef
+      val name = "block_Line" + inst.lineNumber
+      chunkDef.name = name
+      chunks.chunks.add(chunkDef)
+
+      // commit the chunks  
+      if (chunks.chunks.size() > 0) {
+        acceptor.accept(chunks)
+        blockAcceptor.accept(chunks)
+      }
+
+      // and slots.. 
+      var slot = simpleSlot("action")
+      slot.value.name = inst.buildInstruction(acceptor, blockAcceptor) as String
+      chunkDef.slots.add(slot)
+
+      if (!isFirst) {
+        slot = simpleSlot("prior")
+        slot.value.name = lastName
+        chunkDef.slots.add(slot)
+      }
+
+      if (isFirst)
+        firstName = name
+      lastName = name
+    }
+
+    /*
+     * we aren't a function, but we still need a Pipeline chunk to start us off..
+     */
+    if (!isNamedBlock) {
+      var blockName = "unamedBlock_Line" + block.lineNumber
+      var type = getChunkType("Pipeline")
+      val chunks = chunks
+      chunks.type = type
+
+      val def = chunkDef
+      def.name = blockName
+      chunks.chunks.add(def)
+
+      var slot = simpleSlot("initial")
+      slot.value.name = firstName
+      def.slots.add(slot)
+
+      acceptor.accept(chunks)
+      blockAcceptor.accept(chunks)
+
+      firstName = blockName
+    }
+
+    firstName
+  }
+
+  def lineNumber(EObject object) {
+    val node = NodeModelUtils.getNode(object)
+    var lineNumber = 0
+    if (node !== null)
+      lineNumber = node.startLine
+    lineNumber
+  }
+
+  def textOf(EObject object) {
+    val node = NodeModelUtils.getNode(object)
+    if (node !== null)
+      return node.text
+    return null
+  }
+
+  def build(Pattern pattern) {
+    val prescribedSlots = pattern.type.allSlotNames
+    val uniqueEqualitySlots = pattern.slots.filter [ slot |
+      slot.condition == Condition.EQUALS && prescribedSlots.containsKey(slot.name)
+    ].toList
+    val remainingSlots = pattern.slots.toList
+    remainingSlots.removeAll(uniqueEqualitySlots)
+
+    val List<Chunks> rtn = newArrayList
+    val allChunks = newArrayList
+    /*
+     * rootChunk is the chunk of pattern's type that is made
+     * up of the unique equalities
+     */
+    val rootChunk = chunkDef
+    rootChunk.name = pattern.name + "Base"
+    uniqueEqualitySlots.forEach [ cSlot |
+      rootChunk.slots.add(cSlot.toSimpleSlot)
+    ]
+    allChunks.add(rootChunk)
+
+    val rootChunks = chunks
+    rootChunks.type = getChunkType(pattern.type.name)
+    rootChunks.chunks.add(rootChunk)
+
+    CommentUtilities.comment(rootChunks, '\n' + pattern.textOf)
+
+    rtn.add(rootChunks)
+    /*
+     * now, for each remaining slot, create a condition chunk
+     */
+    val modChunks = chunks
+    val count = new AtomicInteger(0)
+    modChunks.type = getChunkType("condition")
+    remainingSlots.forEach [ cSlot |
+      val modChunk = cSlot.toConditionChunk
+      modChunk.name = pattern.name + "Condition" + count.get
+      modChunks.chunks.add(modChunk)
+      allChunks.add(modChunk)
+      count.incrementAndGet
+    ]
+    if (modChunks.chunks.size() > 0)
+      rtn.add(modChunks)
+
+    /*
+     * now for the ListElement and LastListElements.
+     *  and the last one's type
+     * is LastListElement 
+     */
+    for (i : 0 .. allChunks.size - 1) {
+      val isFirst = i === 0
+      val isLast = i === allChunks.size - 1
+
+      var type = getChunkType("ListElement")
+      if (isLast)
+        type = getChunkType("LastListElement")
+
+      var name = pattern.name + "LI" + i
+      val item = allChunks.get(i)
+      var prior = pattern.name + "LI" + (i - 1)
+      if(isFirst) prior = null
+
+      val listChunks = chunks
+      listChunks.type = type
+      rtn.add(listChunks)
+
+      val chunk = chunkDef
+      chunk.name = name
+      listChunks.chunks.add(chunk)
+
+      var slot = simpleSlot("item")
+      slot.value.name = item.name
+      chunk.slots.add(slot)
+
+      if (!isFirst) {
+        slot = simpleSlot("prior")
+        slot.value.name = prior
+        chunk.slots.add(slot)
+      }
+
+    }
+    rtn
+  }
+
+  def allSlotNames(ChunkType type) {
+    var cType = type;
+    val map = new HashMap
+
+    if (type === null)
+      return map
+
+    val visited = new HashSet
+    while (cType !== null) {
+      // defense incase of inadvertant cycle
+      if (visited.contains(cType))
+        return map
+
+      visited.add(cType)
+
+      for (slot : cType.slots)
+        map.putIfAbsent(slot.name, slot)
+
+      cType = cType.superType
+    }
+
+    map
+  }
+}

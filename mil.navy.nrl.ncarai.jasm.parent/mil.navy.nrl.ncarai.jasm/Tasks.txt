@@ -1,0 +1,51 @@
+- rename to Jass
+ - extension
+ - packages
+ - classes
+
+ - fix parameters in jactr so it applies across all files imported.
+ - case fall through? 
+    case ... :
+    case ... :
+    case ... : {}
+    
+ x FunctionCallGenerator bug for  originalCount = CountCards(near=goal.near)
+ x return number literals throw an error
+   x parser
+   x validator
+   x generator
+ x return null throws an error
+   x parser
+   x validator
+   x generator
+   
+ - free standing cast statement: buffer as chunktype
+   - wouldn't generate any productions, only manipulate the generation context (buffer content type)
+     
+ - permit patterns to be defined globally or locally (w/in function). This would reduce clutter of the global space
+   caused by function specific (goal) patterns. Should be relatively easy to implement
+ 
+ - validate that the cast is valid
+   
+ - reward # 
+  - validator
+  x generator
+  - support skip/stop?
+  - test
+      
+ x support slot/buffer ref as request ala request retrieval(goal.slot)  or request imaginal(retrieval)  
+  x validator : require cast for anything but pattern
+  x fix highlighting
+  x fix hovers for pattern
+  x fix navigation
+  x cast needs to be ID so we can cast to functions too
+   x fix hover
+   x fix navigation
+  x infer contents
+ 
+ - support {} block or mapping block in both handler and error handler for requests
+ 
+ - validate function call 
+ - validate insertion point (unique names w/in function)
+ 
+ - improve validation of remove/request pairings

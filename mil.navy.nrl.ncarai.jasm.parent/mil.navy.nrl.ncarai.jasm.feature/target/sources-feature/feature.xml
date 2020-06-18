@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature id="mil.navy.nrl.ncarai.jasm.feature.source" version="1.0.0.202002061702" label="JASM Program Feature Developer Resources">
+  <includes id="mil.navy.nrl.ncarai.jasm.feature" version="1.0.0.202002061702"/>
+  <plugin id="mil.navy.nrl.ncarai.jasm.source" version="1.0.0.202002061702" download-size="0" install-size="0" unpack="false"/>
+  <plugin id="mil.navy.nrl.ncarai.jasm.ide.source" version="1.0.0.202002061702" download-size="0" install-size="0" unpack="false"/>
+  <plugin id="mil.navy.nrl.ncarai.jasm.ui.source" version="1.0.0.202002061702" download-size="0" install-size="0" unpack="false"/>
+</feature>
