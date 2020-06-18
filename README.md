@@ -15,7 +15,7 @@ JASM runs within the [Eclipse](http://www.eclipse.org/) IDE.
 9. Click **Next** to finalize the installation.
 
 ## Tutorial
-The tutorial can be found [here](). It follows the traditional ACT-R unit 1 tutorial for its examples.
+The tutorial can be found [here](https://github.com/amharrison/Jass/tree/master/unit1). It follows the traditional ACT-R unit 1 tutorial for its examples.
 
 ## Build
 Follow the installation instructions but do not install the JASM components in the final step. Import all of the *mil.navy.nrl.ncarai.jasm* packages from here. Use Maven to generate the source artifacts. 
