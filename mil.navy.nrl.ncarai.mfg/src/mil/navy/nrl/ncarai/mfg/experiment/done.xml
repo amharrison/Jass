@@ -1,0 +1,17 @@
+<sensor name="test">
+ <time relative="0.1"> <!-- at this time, do this -->
+     <add alias="done" type="AFFERENT">
+        <!-- must have for visual info -->
+        <boolean name="visual.isVisual" value="true"/>
+        <!-- center of fov -->
+        <doubles name="visual.retinal.location" value="0,0"/>
+        <double name="visual.retinal.distance" value="1"/>
+        <doubles name="visual.retinal.size" value="5,5"/> <!-- 2.5 deg radius -->
+        <boolean name="visual.visible" value="true"/>
+        <strings name="visual.type" value="text"/>
+        <string name="visual.text" value="done"/>
+        <string name="visual.token" value="done"/>
+        <doubles name="visual.color" value="1,0,0,1"/>
+    </add>
+ </time>    
+</sensor>

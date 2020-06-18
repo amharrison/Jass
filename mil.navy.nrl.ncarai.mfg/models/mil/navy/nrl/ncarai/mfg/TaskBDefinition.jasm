@@ -1,0 +1,97 @@
+
+namespace mil.navy.nrl.ncarai.mfg.TaskBDefinition target mil.navy.nrl.ncarai.mfg.TaskB{
+import jactr.declarative.*
+import jactr.procedural.*
+import jactr.retrieval.*
+import jactr.imaginal.*
+import jactr.visual.*
+import jactr.motor.*
+import jactr.aural.*
+import jactr.vocal.*
+import jactr.goal.*
+
+tmpIsNull = {
+  isa TaskB 
+  tmp =  null
+}
+
+tmpIsNotNull = {
+  isa TaskB
+  tmp != null
+}
+
+newVisualLocation = {
+  isa visual-location
+  :attended != true
+}
+
+
+moveVisualAttention = {
+  isa attend-to
+  where =  =visual-location
+}
+
+anyVisLoc = {
+  isa visual-location
+}
+
+buttonPress = {
+  isa punch
+  finger =  index
+  hand   =  right
+}
+
+resetVisual = {
+  isa clear
+  all =  true
+}
+
+tmpBinding = {
+  isa TaskB
+  tmp =  =visual-location
+}
+
+
+function void TaskB(){
+  slot tmp = null
+  request visual(resetVisual)
+  ->tmp=null
+    =>{
+    tmp=null
+  }
+  // wait for something visual
+  while(goal(tmpIsNull))
+  {
+    request visual-location(newVisualLocation)
+      -> tmp = visual-location
+      =>{
+      tmp=null
+    }
+//    if(goal(tmpIsNotNull)){
+//      request visual(moveVisualAttention), 
+//            goal(tmpBinding) as visual-object
+//        -> tmp=visual
+//        => {
+//        tmp = null
+//      }
+//    }
+  }
+//  // now that something has been found, attend to everything
+//  for(visual-location,
+//    newVisualLocation, goal(tmpIsNotNull),
+//    newVisualLocation, goal(tmpIsNotNull)){
+//    request visual(moveVisualAttention), 
+//            visual-location(anyVisLoc) as visual-object
+//      -> tmp=visual
+//      => {
+//      tmp = null
+//    }
+//  }
+    // and press a button
+  request motor(buttonPress)
+    => {
+    tmp = null
+  }
+  return
+}
+}

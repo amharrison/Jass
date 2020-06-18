@@ -1,0 +1,293 @@
+namespace mil.navy.nrl.ncarai.mfg.TaskManagerDefinition target mil.navy.nrl.ncarai.mfg.TaskManager{
+import jactr.declarative.*
+import jactr.procedural.*
+import jactr.retrieval.*
+import jactr.imaginal.*
+import jactr.visual.*
+import jactr.motor.*
+import jactr.aural.*
+import jactr.vocal.*
+import jactr.goal.*
+import jactr.episodic.*
+include jasm.episodicBufferDef.*
+import mil.navy.nrl.ncarai.mfg.TaskA.*
+include mil.navy.nrl.ncarai.mfg.TaskADefinition.*
+import mil.navy.nrl.ncarai.mfg.TaskB.*
+include mil.navy.nrl.ncarai.mfg.TaskBDefinition.*
+import mil.navy.nrl.ncarai.mfg.TaskC.* 
+include mil.navy.nrl.ncarai.mfg.TaskCDefinition.*
+import mil.navy.nrl.ncarai.mfg.TaskD.*
+include mil.navy.nrl.ncarai.mfg.TaskDDefinition.* 
+
+chunk task-a, task-b, task-c, task-d
+
+chunktype sequence {
+  current = null
+  next    = null
+}
+
+sequence seq-1(current=null, next=task-a), seq-2(current=task-a, next=task-b),
+ seq-3(current=task-b, next=task-c), seq-4(current=task-c, next=task-d), seq-5(current=task-d, next=task-a)
+
+
+underspecifiedEpisode = {
+  isa episode
+}
+
+notRecentUnderspecifiedEpisode = {
+  isa episode
+  :recently-retrieved = false
+}
+
+currentIsNull={
+  isa NextTask
+  current =  null
+}
+
+nextIsNull={
+  isa NextTask
+  next =  null
+}
+
+firstSequence = {
+  isa sequence
+  current =  null
+}
+
+nextInSequence = {
+  isa sequence
+  current =  =current
+}
+
+anySequence = {
+  isa sequence
+}
+
+currentBinding = {
+  isa NextTask
+  current =  =current
+}
+
+episodeNextTask ={
+  isa episode
+  reference =  =next
+}
+
+nextBinding = {
+  isa NextTask
+  next =  =next
+}
+
+episodeBinding ={
+  isa episode
+  reference =  =reference
+  time      =  =time
+}
+
+nextIsA ={
+  isa NextTask
+  next =  task-a
+}
+
+nextIsB ={
+  isa NextTask
+  next =  task-b
+}
+
+nextIsC ={
+  isa NextTask
+  next =  task-c
+}
+
+nextIsD ={
+  isa NextTask
+  next =  task-d
+}
+
+currentIsNotNull = {
+  isa NextTask
+  current != null
+}
+
+priorIsNull = {
+  isa NextTask
+  prior =  null
+}
+
+twoBackIsNull = {
+  isa NextTask
+  twoBack =  null
+}
+
+currentIsPrior = {
+  isa NextTask
+  prior   =  =prior
+  current =  =prior
+}
+
+function void NextTask() {
+  slot current = null
+  slot prior = null
+  slot next = null
+  slot twoBack = null
+
+    /*
+     * this delegates to TM.NextTask-unlock
+     */
+  <[bootstrap, unlocked]>
+    
+  while(goal(nextIsNull))
+  {
+       
+    if(goal(currentIsNull)){
+      /*
+       * first we determine what needs to be done. 
+       * We do that by retrieving the hottest 
+       * episode and assuming it was the (completed) 
+       * current. if no episode is retrieved, we 
+       * stumble forward
+       */
+      request retrieval(underspecifiedEpisode)
+        -> current = retrieval.reference
+        =>{
+        current = null
+      }
+    }
+    
+    if(goal(priorIsNull))
+    {
+      request retrieval(notRecentUnderspecifiedEpisode)
+       -> prior = retrieval.reference
+       =>{
+         prior=null
+       }
+    }
+
+    if(goal(currentIsNull)){
+      /*
+       * if we stumbled forward, try to retrieve 
+       * any sequence (of tasks) to execute. If 
+       * that fails, pick next task randomly
+       */
+      request retrieval(anySequence)
+        -> next = retrieval.next
+        =>{
+          //pick randomly
+        match{
+          case goal(nextIsNull) : {
+            next = task-a
+          }
+          case goal(nextIsNull) : {
+            next = task-b
+          }
+          case goal(nextIsNull) : {
+            next = task-c
+          }
+        default : {
+          next = task-d
+        }
+        }
+      }
+    }
+    else
+    {
+        /*
+         * retrieve the next in the sequence, 
+         * or randomly pick one
+         */
+      request retrieval(nextInSequence), goal(currentBinding)
+        -> next = retrieval.next
+        =>{
+        match{
+          case goal(nextIsNull) : {
+            next = task-a
+          }
+          case goal(nextIsNull) : {
+            next = task-b
+          }
+          case goal(nextIsNull) : {
+            next = task-c
+          }
+        default : {
+          next = task-d
+        }
+        }
+      }
+    }
+      /*
+       * then encode an episode for the to-be-done task
+       */
+    request episodic(episodeNextTask), goal(nextBinding)
+
+      /*
+       * should we explicitly rehearse?
+       */
+    if(goal(priorIsNull)){
+      request imaginal(episodeBinding), episodic(episodeBinding)
+      remove imaginal
+      request imaginal(episodeBinding), episodic(episodeBinding)
+      remove imaginal
+      request imaginal(episodeBinding), episodic(episodeBinding)
+      remove imaginal
+      request imaginal(episodeBinding), episodic(episodeBinding)
+      remove imaginal
+    }
+   
+    remove episodic
+    
+      /*
+       * retrieve the episode cold
+       */
+    request retrieval(underspecifiedEpisode)
+      -> next = retrieval.reference
+      =>{
+      match{
+        case goal(nextIsNull) : {
+          next = task-a
+        }
+        case goal(nextIsNull) : {
+          next = task-b
+        }
+        case goal(nextIsNull) : {
+          next = task-c
+        }
+        default : {
+          next = task-d
+        }
+      }
+    }
+
+
+      /*
+       * execute the episode's task
+       */
+    match{
+      case goal(nextIsA) : {
+        TaskA()
+      }
+      case goal(nextIsB) : {
+        TaskB()
+      }
+      case goal(nextIsC) : {
+        TaskC()
+      }
+      case goal(nextIsD) : {
+        TaskD()
+      }
+       default : {
+         TaskA()
+     }
+    }
+
+      /*
+       * update our internal state. 
+       */
+    twoBack = prior
+    prior = goal.current // to disambiguate from the chunk current
+    current = next
+    next = null
+  }
+  return
+}
+
+}

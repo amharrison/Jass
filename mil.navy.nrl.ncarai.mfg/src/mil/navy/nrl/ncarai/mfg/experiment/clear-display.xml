@@ -1,0 +1,5 @@
+<sensor name="test">
+ <time relative="0.0"> 
+    <remove pattern=".*" type="AFFERENT" />
+ </time>    
+</sensor>

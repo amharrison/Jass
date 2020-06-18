@@ -1,0 +1,53 @@
+/*
+ * 
+ */
+ namespace jactr.episodic{
+ 
+ import jactr.declarative.*
+ import jactr.procedural.*
+ import jactr.retrieval.*
+ import jactr.imaginal.*
+ import jactr.visual.*
+ import jactr.aural.*
+ import jactr.vocal.*
+ import jactr.goal.*
+    
+ module "org.jactr.core.module.declarative.six.DefaultDeclarativeModule6" [
+   "ActivationNoise"          : "0"
+   "BaseLevelConstant"        : "0"
+   "EnablePartialMatching"    : "false"
+   "MaximumDifference"        : "-1"
+   "MaximumSimilarity"        : "0"
+   "MismatchPenalty"          : "1"
+   "PermanentActivationNoise" : "0"]
+ module "org.jactr.core.module.procedural.six.DefaultProceduralModule6" [
+   "DefaultProductionFiringTime" : "0.05"
+   "ExpectedUtilityNoise"        : "0"
+   "NumberOfProductionsFired"    : "0" ]
+ module "org.jactr.core.module.goal.six.DefaultGoalModule6" [ ]
+ module "org.jactr.core.module.retrieval.six.DefaultRetrievalModule6" [
+   "EnableIndexedRetrievals" : "false"
+   "FINSTDurationTime"       : "3.0"
+   "LatencyFactor"           : "1"
+   "NumberOfFINSTs"          : "4"
+   "RetrievalThreshold"      : "0" ]
+   
+ /**
+  * common buffers
+  */  
+ buffers {
+   episodic {} [
+     "Activation"              : "1"
+     "G"                       : "0"
+     "StrictHarvestingEnabled" : "true" ]
+ }
+ 
+ 
+ chunktype episode { 
+   reference = null
+   time = 0
+ }
+ 
+ 
+ 
+ }

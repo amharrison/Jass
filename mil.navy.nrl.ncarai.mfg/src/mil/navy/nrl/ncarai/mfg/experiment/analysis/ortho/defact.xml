@@ -1,0 +1,36 @@
+<root name="default action time">
+	<analyzer class="mil.navy.nrl.ncarai.mfg.experiment.analysis.SliceAnalyzer" />
+  <population>
+  
+    
+    <modifier class="org.jactr.tools2.iterative.ortho.ModuleParameterModifier">
+      <parameter name="ModuleClass"
+        value="org.jactr.core.module.procedural.six.DefaultProceduralModule6" />
+      <parameter name="ParameterName" value="DefaultProductionFiringTime" />
+      <parameter name="ParameterValues" value="0.05" />
+    </modifier>
+    
+<!-- 
+    <modifier class="org.jactr.tools.itr.SystemPropertyModifier">
+      <parameter name="SystemProperty" value="jactrFactorySize" />
+      <parameter name="PropertyValues" value="10,100" />
+    </modifier>
+    
+    <modifier class="org.jactr.tools.itr.ChunkTypeSlotModifier">
+      <parameter name="ChunkType" value="goal" />
+      <parameter name="ParameterName" value="cutoff" />
+      <parameter name="ParameterValues" value="25" />
+    </modifier>
+
+    
+    <modifier class="org.jactr.tools.itr.BufferParameterModifier">
+      <parameter name="BufferName" value="imaginal" />
+      <parameter name="ParameterName" value="Activation" />
+      <parameter name="ParameterValues" value="1" />
+    </modifier>
+ -->
+  
+
+  </population>
+
+</root>

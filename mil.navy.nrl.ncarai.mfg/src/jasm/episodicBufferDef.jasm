@@ -1,0 +1,15 @@
+namespace jasm.episodicBufferDef target jasm.epsiode{
+import jactr.declarative.*
+import jactr.procedural.*
+import jactr.retrieval.*
+import jactr.imaginal.*
+import jactr.visual.*
+import jactr.motor.*
+import jactr.aural.*
+import jactr.vocal.*
+import jactr.goal.*
+import jactr.episodic.*
+
+episodic writable requests episode -> episode 
+
+}

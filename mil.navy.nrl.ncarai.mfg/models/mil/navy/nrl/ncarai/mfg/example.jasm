@@ -1,0 +1,93 @@
+namespace mil.navy.nrl.ncarai.mfg.example target mil.navy.nrl.ncarai.mfg.Example{
+import jactr.declarative.*
+import jactr.procedural.*
+import jactr.retrieval.*
+import jactr.imaginal.*
+import jactr.visual.*
+import jactr.motor.*
+import jactr.aural.*
+import jactr.vocal.*
+import jactr.goal.*
+
+chunk forgot
+
+chunktype destination {
+  uav      = null
+  waypoint = null
+}
+
+chunktype waypointLabel {
+  label = null
+  waypoint = null
+}
+
+uavBinding = {
+  isa UAVDestinationQuery
+  uav = =uav
+}
+
+waypointBinding = {
+  isa UAVDestinationQuery
+  waypoint = =waypoint
+}
+
+responseBinding = {
+  isa UAVDestinationQuery
+  response = =response
+}
+
+uavTarget = {
+  isa destination
+  uav = =uav
+}
+
+waypointNotForgotten = {
+  isa UAVDestinationQuery
+  waypoint != forgot
+}
+
+wayPointDestination = {
+  isa waypointLabel
+  waypoint = =waypoint
+}
+
+speakResponse = {
+  isa speak
+  string = =response
+}
+
+/**
+ * Respond to destination query
+ */
+function void UAVDestinationQuery(slot uav = null){
+  slot waypoint = null
+  slot response = null
+  
+  //retrieve UAV's target way-point
+  request retrieval(uavTarget), goal(uavBinding)
+    -> waypoint = retrieval.waypoint
+    =>{
+      waypoint = forgot
+    }
+  
+  //if retrieved, retrieve the waypoint's label
+  if(goal(waypointNotForgotten))
+  {
+    request retrieval(wayPointDestination), goal(waypointBinding)
+    -> response = retrieval.label
+    => {
+      response = "I don't know"
+    }
+  }
+  else
+  {
+    response = "I don't know"
+  }
+  
+  //finally say the way-point label
+  request vocal(speakResponse), goal(responseBinding)
+  remove vocal
+    
+  return
+}
+}

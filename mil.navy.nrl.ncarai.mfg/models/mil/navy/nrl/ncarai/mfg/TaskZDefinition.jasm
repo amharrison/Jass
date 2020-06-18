@@ -1,0 +1,92 @@
+
+namespace mil.navy.nrl.ncarai.mfg.TaskZDefinition target mil.navy.nrl.ncarai.mfg.TaskZ{
+import jactr.declarative.*
+import jactr.procedural.*
+import jactr.retrieval.*
+import jactr.imaginal.*
+import jactr.visual.*
+import jactr.motor.*
+import jactr.aural.*
+import jactr.vocal.*
+import jactr.goal.*
+
+tmpIsNull = {
+  isa TaskZ
+  tmp =  null
+}
+
+tmpIsNotNull = {
+  isa TaskZ
+  tmp != null
+}
+
+newVisualLocation = {
+  isa visual-location
+  :attended != true
+}
+
+
+moveVisualAttention = {
+  isa attend-to
+  where =  =visual-location
+}
+
+anyVisLoc = {
+  isa visual-location
+}
+
+buttonPress = {
+  isa punch
+  finger =  ring
+  hand   =  left
+}
+
+resetVisual = {
+  isa clear
+  all =  true
+}
+
+tmpBinding = {
+  isa TaskZ
+  tmp =  =visual-location
+}
+
+tmpIsNotDone = {
+  isa TaskZ
+  tmp != 'done'
+}
+
+
+function void TaskZ(){
+  slot tmp = null
+  // wait for something visual
+  while(goal(tmpIsNull))
+  {
+    request visual-location(newVisualLocation)
+      -> tmp = visual-location
+      =>{
+      request visual(resetVisual)
+       ->tmp=null
+        =>{
+        tmp=null
+      }
+    }
+    if(goal(tmpIsNotNull)){
+      force request visual(moveVisualAttention), 
+                      goal(tmpBinding) as visual-object
+        -> tmp=visual.token
+        => {
+        tmp = null
+      }
+      request motor(buttonPress)
+        => {
+        tmp = null
+      }
+      if(goal(tmpIsNotDone)){
+        tmp = null
+      }
+    }
+  }
+  return
+}
+}

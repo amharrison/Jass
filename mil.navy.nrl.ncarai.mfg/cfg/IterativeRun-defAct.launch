@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<launchConfiguration type="org.jactr.eclipse.runtime.launching.iterative">
+    <booleanAttribute key="org.eclipse.jdt.launching.ATTR_USE_CLASSPATH_ONLY_JAR" value="false"/>
+    <booleanAttribute key="org.eclipse.jdt.launching.ATTR_USE_START_ON_FIRST_THREAD" value="true"/>
+    <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="mil.navy.nrl.ncarai.mfg"/>
+    <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-DConfigurationFile=mil/navy/nrl/ncarai/mfg/experiment/experiment.xml"/>
+    <stringAttribute key="org.jactr.eclipse.runtime.launching.aliasesFor./mil.navy.nrl.ncarai.mfg/models/mil/navy/nrl/ncarai/mfg/TM.jactr" value="participant"/>
+    <intAttribute key="org.jactr.eclipse.runtime.launching.cr.ackTime" value="2000"/>
+    <booleanAttribute key="org.jactr.eclipse.runtime.launching.cr.disconnect" value="false"/>
+    <booleanAttribute key="org.jactr.eclipse.runtime.launching.debugCoreEnabled" value="false"/>
+    <stringAttribute key="org.jactr.eclipse.runtime.launching.debugCoreLogConfiguration" value="/jactr-log.xml"/>
+    <stringAttribute key="org.jactr.eclipse.runtime.launching.debugCoreLogger" value="org.slf4j.impl.log4j12"/>
+    <stringAttribute key="org.jactr.eclipse.runtime.launching.instruments" value="org.jactr.core.logging.impl.DefaultModelLogger"/>
+    <intAttribute key="org.jactr.eclipse.runtime.launching.iterations" value="10"/>
+    <intAttribute key="org.jactr.eclipse.runtime.launching.iterativeDeadlock" value="10000"/>
+    <stringAttribute key="org.jactr.eclipse.runtime.launching.iterativeListeners" value="org.jactr.tools.itr.ortho.OrthogonalSliceAnalyzer"/>
+    <stringAttribute key="org.jactr.eclipse.runtime.launching.modelFiles" value="models/mil/navy/nrl/ncarai/mfg/TM.jactr"/>
+    <stringAttribute key="org.jactr.eclipse.runtime.launching.onStart" value="org.jactr.tools.experiment.bootstrap.StartModelExperiments"/>
+    <stringAttribute key="org.jactr.eclipse.runtime.launching.onStop" value="mil.navy.nrl.ncarai.mfg.experiment.bootstrap.ExperimentStop"/>
+    <mapAttribute key="org.jactr.eclipse.runtime.launching.parametersFor.org.commonreality.sensors.keyboard.DefaultKeyboardSensor">
+        <mapEntry key="Actuator" value="mil.navy.nrl.ncarai.mfg.experiment.keyboard.SimulatedKeyboard"/>
+        <mapEntry key="DurationEquation" value="org.commonreality.sensors.keyboard.SerialDurationEquation"/>
+    </mapAttribute>
+    <mapAttribute key="org.jactr.eclipse.runtime.launching.parametersFor.org.commonreality.sensors.xml2.XMLSensor">
+        <mapEntry key="XMLSensor.DataURI" value=""/>
+    </mapAttribute>
+    <mapAttribute key="org.jactr.eclipse.runtime.launching.parametersFor.org.jactr.core.logging.impl.DefaultModelLogger">
+        <mapEntry key="MaxFileSize" value="1"/>
+        <mapEntry key="NumberOfBackups" value="3"/>
+        <mapEntry key="all" value="log.txt"/>
+        <mapEntry key="attach" value="all"/>
+    </mapAttribute>
+    <mapAttribute key="org.jactr.eclipse.runtime.launching.parametersFor.org.jactr.entry.iterative.impl.RealTimeFactorPerformanceListener">
+        <mapEntry key="BlockSize" value="1"/>
+        <mapEntry key="FileName" value="rt-perf.txt"/>
+        <mapEntry key="RowHeader" value=""/>
+    </mapAttribute>
+    <mapAttribute key="org.jactr.eclipse.runtime.launching.parametersFor.org.jactr.tools.itr.ortho.OrthogonalSliceAnalyzer">
+        <mapEntry key="ConfigURL" value="mil/navy/nrl/ncarai/mfg/experiment/analysis/ortho/defact.xml"/>
+    </mapAttribute>
+    <mapAttribute key="org.jactr.eclipse.runtime.launching.parametersFor.org.jactr.tools.marker.tracer.MarkerTraceListener"/>
+    <mapAttribute key="org.jactr.eclipse.runtime.launching.parametersFor.org.jactr.tools.tracer.listeners.BufferTracer"/>
+    <mapAttribute key="org.jactr.eclipse.runtime.launching.parametersFor.org.jactr.tools.tracer.listeners.LogTracer"/>
+    <mapAttribute key="org.jactr.eclipse.runtime.launching.parametersFor.org.jactr.tools.tracer.listeners.ProceduralModuleTracer"/>
+    <booleanAttribute key="org.jactr.eclipse.runtime.launching.recordTrace" value="false"/>
+    <stringAttribute key="org.jactr.eclipse.runtime.launching.sensors" value="org.commonreality.sensors.keyboard.DefaultKeyboardSensor,org.commonreality.sensors.xml2.XMLSensor"/>
+    <stringAttribute key="org.jactr.eclipse.runtime.launching.sourceConfiguration" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#10;&lt;launchConfiguration local=&quot;false&quot; path=&quot;/mil.navy.nrl.ncarai.mfg/cfg/InterruptionRunner-silent.launch&quot;/&gt;&#10;"/>
+    <stringAttribute key="org.jactr.eclipse.runtime.launching.tracers" value=""/>
+    <booleanAttribute key="org.jactr.eclipse.runtime.launching.useEmbed" value="false"/>
+    <stringAttribute key="pde.version" value="3.3"/>
+</launchConfiguration>

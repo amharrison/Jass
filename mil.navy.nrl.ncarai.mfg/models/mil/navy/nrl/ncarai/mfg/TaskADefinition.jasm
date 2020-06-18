@@ -1,0 +1,81 @@
+
+namespace mil.navy.nrl.ncarai.mfg.TaskADefinition target mil.navy.nrl.ncarai.mfg.TaskA{
+import jactr.declarative.*
+import jactr.procedural.*
+import jactr.retrieval.*
+import jactr.imaginal.*
+import jactr.visual.*
+import jactr.motor.*
+import jactr.aural.*
+import jactr.vocal.*
+import jactr.goal.*
+
+tmpIsNull = {
+  isa TaskA
+  tmp =  null
+}
+
+tmpIsNotNull = {
+  isa TaskA
+  tmp != null
+}
+
+newVisualLocation = {
+  isa visual-location
+  :attended != true
+}
+
+
+moveVisualAttention = {
+  isa attend-to
+  where =  =visual-location
+}
+
+anyVisLoc = {
+  isa visual-location
+}
+
+buttonPress = {
+  isa punch
+  finger =  index
+  hand   =  right
+}
+
+resetVisual = {
+  isa clear
+  all =  true
+}
+
+tmpBinding = {
+  isa TaskA
+  tmp =  =visual-location
+}
+
+/*
+ * See something? press button
+ */
+function void TaskA() {
+  slot tmp = null
+  //reset the visual system
+  request visual(resetVisual)
+    ->tmp=null
+    =>{
+    tmp=null
+  }
+  // wait for something visual
+  while(goal(tmpIsNull))
+  {
+    request visual-location(newVisualLocation)
+      -> tmp = visual-location
+      =>{
+      tmp=null
+    }
+  }
+ // and press a button
+  request motor(buttonPress)
+    => {
+    tmp = null
+  }
+  return
+}
+}

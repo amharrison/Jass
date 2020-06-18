@@ -1,0 +1,134 @@
+<experiment
+	class="org.jactr.tools.experiment.impl.BasicExperiment"
+	name="experiment1" shuffle="false" iterations="1">
+
+	<!-- dump to data/subjectID/output.xml -->
+	<data-logger
+		class="org.jactr.tools.experiment.impl.XMLDataLogger" path="./data"
+		file="output.xml" />
+	<data-collector-init
+		class="mil.navy.nrl.ncarai.mfg.experiment.data.DataCollectorInit" />
+	<trial-handler
+		class="mil.navy.nrl.ncarai.mfg.experiment.handler.PrimaryHandler" />
+	<trial-handler
+		class="mil.navy.nrl.ncarai.mfg.experiment.handler.InterruptingHandler" />
+
+	<aliases>
+		<alias name="modelName" value="participant" />
+	</aliases>
+
+	<!-- 10 minutes (600s) for primary and secondary task training -->
+
+	<!-- 
+	<primary id="primaryTaskTrain" duration="600" block="0"
+		model="participant" />
+	<interrupt id="interruptionTaskTrain" duration="600"
+		model="participant" />
+	-->
+	<!-- -->
+
+	<!-- 3 20 minute blocks of 1:10 primary task, :30 secondary task, x 12 primary 
+		task records responses. secondary task clears buffers on start. -->
+	<primary id="p1_1" duration="70" block="1" model="participant" />
+	<interrupt id="i1_1" duration="30" model="participant" />
+	<primary id="p1_2" duration="70" block="1" model="participant" />
+	<interrupt id="i1_2" duration="30" model="participant" />
+	<primary id="p1_3" duration="70" block="1" model="participant" />
+	<interrupt id="i1_3" duration="30" model="participant" />
+	<primary id="p1_4" duration="70" block="1" model="participant" />
+	<interrupt id="i1_4" duration="30" model="participant" />
+	<primary id="p1_5" duration="70" block="1" model="participant" />
+	<interrupt id="i1_5" duration="30" model="participant" />
+	<primary id="p1_6" duration="70" block="1" model="participant" />
+	<interrupt id="i1_6" duration="30" model="participant" />
+	<primary id="p1_7" duration="70" block="1" model="participant" />
+	<interrupt id="i1_7" duration="30" model="participant" />
+	<primary id="p1_8" duration="70" block="1" model="participant" />
+	<interrupt id="i1_8" duration="30" model="participant" />
+	<primary id="p1_9" duration="70" block="1" model="participant" />
+	<interrupt id="i1_9" duration="30" model="participant" />
+	<primary id="p1_10" duration="70" block="1" model="participant" />
+	<interrupt id="i1_10" duration="30" model="participant" />
+	<primary id="p1_11" duration="70" block="1" model="participant" />
+	<interrupt id="i1_11" duration="30" model="participant" />
+	<primary id="p1_12" duration="70" block="1" model="participant" />
+	<interrupt id="i1_12" duration="30" model="participant" />
+	<!-- -->
+	<primary id="p2_1" duration="70" block="2" model="participant" />
+	<interrupt id="i2_1" duration="30" model="participant" />
+	<primary id="p2_2" duration="70" block="2" model="participant" />
+	<interrupt id="i2_2" duration="30" model="participant" />
+	<primary id="p2_3" duration="70" block="2" model="participant" />
+	<interrupt id="i2_3" duration="30" model="participant" />
+	<primary id="p2_4" duration="70" block="2" model="participant" />
+	<interrupt id="i2_4" duration="30" model="participant" />
+	<primary id="p2_5" duration="70" block="2" model="participant" />
+	<interrupt id="i2_5" duration="30" model="participant" />
+	<primary id="p2_6" duration="70" block="2" model="participant" />
+	<interrupt id="i2_6" duration="30" model="participant" />
+	<primary id="p2_7" duration="70" block="2" model="participant" />
+	<interrupt id="i2_7" duration="30" model="participant" />
+	<primary id="p2_8" duration="70" block="2" model="participant" />
+	<interrupt id="i2_8" duration="30" model="participant" />
+	<primary id="p2_9" duration="70" block="2" model="participant" />
+	<interrupt id="i2_9" duration="30" model="participant" />
+	<primary id="p2_10" duration="70" block="2" model="participant" />
+	<interrupt id="i2_10" duration="30" model="participant" />
+	<primary id="p2_11" duration="70" block="2" model="participant" />
+	<interrupt id="i2_11" duration="30" model="participant" />
+	<primary id="p2_12" duration="70" block="2" model="participant" />
+	<interrupt id="i2_12" duration="30" model="participant" />
+	<!-- -->
+	<primary id="p3_1" duration="70" block="3" model="participant" />
+	<interrupt id="i3_1" duration="30" model="participant" />
+	<primary id="p3_2" duration="70" block="3" model="participant" />
+	<interrupt id="i3_2" duration="30" model="participant" />
+	<primary id="p3_3" duration="70" block="3" model="participant" />
+	<interrupt id="i3_3" duration="30" model="participant" />
+	<primary id="p3_4" duration="70" block="3" model="participant" />
+	<interrupt id="i3_4" duration="30" model="participant" />
+	<primary id="p3_5" duration="70" block="3" model="participant" />
+	<interrupt id="i3_5" duration="30" model="participant" />
+	<primary id="p3_6" duration="70" block="3" model="participant" />
+	<interrupt id="i3_6" duration="30" model="participant" />
+	<primary id="p3_7" duration="70" block="3" model="participant" />
+	<interrupt id="i3_7" duration="30" model="participant" />
+	<primary id="p3_8" duration="70" block="3" model="participant" />
+	<interrupt id="i3_8" duration="30" model="participant" />
+	<primary id="p3_9" duration="70" block="3" model="participant" />
+	<interrupt id="i3_9" duration="30" model="participant" />
+	<primary id="p3_10" duration="70" block="3" model="participant" />
+	<interrupt id="i3_10" duration="30" model="participant" />
+	<primary id="p3_11" duration="70" block="3" model="participant" />
+	<interrupt id="i3_11" duration="30" model="participant" />
+	<primary id="p3_12" duration="70" block="3" model="participant" />
+	
+	<!-- -->
+
+	<start>
+		<lock name="participant" />
+
+		<!-- block until actr is ready to run -->
+		<wait-for-actr />
+
+		<!-- drop open data tag w/ attrs subject and conf to the log file -->
+		<record open="data" subject="${SubjectId}" conf="${DataPath}" />
+		<log message="starting experiment" />
+	</start>
+
+	<end>
+
+		<record simple="duration" time="${delta}" />
+		<!-- close the data tag in the log file -->
+		<record close="data" />
+
+		<!-- release the model to allow the runtime to (hopefully) exit -->
+		<unlock name="participant" />
+
+		<log message="terminating experiment" />
+		<!-- record end of experiment for the subject -->
+
+		<terminate />
+	</end>
+
+</experiment>  

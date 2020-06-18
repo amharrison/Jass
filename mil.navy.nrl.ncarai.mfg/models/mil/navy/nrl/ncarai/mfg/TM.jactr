@@ -1,0 +1,126 @@
+/*
+ * 
+ */
+ namespace TM{
+import jactr.declarative.*
+import jactr.procedural.*
+import jactr.retrieval.*
+import jactr.imaginal.*
+import jactr.visual.*
+import jactr.motor.*
+import jactr.aural.*
+import jactr.vocal.*
+import jactr.goal.*
+import jactr.episodic.*
+import jasm.procedural.Goal.*
+import mil.navy.nrl.ncarai.mfg.TaskManager.*
+import mil.navy.nrl.ncarai.mfg.TaskA.*
+import mil.navy.nrl.ncarai.mfg.TaskB.*
+import mil.navy.nrl.ncarai.mfg.TaskC.*
+import mil.navy.nrl.ncarai.mfg.TaskD.*
+import mil.navy.nrl.ncarai.mfg.TaskZ.*
+
+module "org.jactr.core.module.declarative.six.DefaultDeclarativeModule6" [
+  "ActivationNoise"          : "0.1"
+  "BaseLevelConstant"        : "0"
+  "EnablePartialMatching"    : "false"
+  "MaximumDifference"        : "-1"
+  "MaximumSimilarity"        : "0"
+  "MismatchPenalty"          : "1"
+  "PermanentActivationNoise" : "0"]
+module "org.jactr.core.module.procedural.six.DefaultProceduralModule6" [
+  "DefaultProductionFiringTime" : "0.05"
+  "ExpectedUtilityNoise"        : "0"
+  "NumberOfProductionsFired"    : "0" ]
+module "org.jactr.core.module.goal.six.DefaultGoalModule6" []
+module "org.jactr.core.module.retrieval.six.DefaultRetrievalModule6" [
+  "EnableIndexedRetrievals" : "false"
+  "FINSTDurationTime"       : "3.0"
+  "LatencyFactor"           : "1"
+  "NumberOfFINSTs"          : "4"
+  "RetrievalThreshold"      : "0" ]
+module "org.jactr.core.module.imaginal.six.DefaultImaginalModule6" []
+module "org.jactr.core.module.declarative.six.learning.DefaultDeclarativeLearningModule6"[
+  "MaximumAssociativeStrength" : "6.5"
+  "OptimizedLearning"          : "10"
+  "BaseLevelLearningRate"      : "0.5"
+]
+module "org.jactr.core.module.procedural.six.learning.DefaultProceduralLearningModule6"["OptimizedLearning" : "10"]
+module "org.jactr.core.module.random.six.DefaultRandomModule" ["RandomSeed" : ""]
+module "org.jactr.modules.pm.aural.six.DefaultAuralModule6"["EnableBufferStuff" : false]
+module "org.jactr.modules.pm.visual.six.DefaultVisualModule6"[
+  "EnableVisualBufferStuff" : false
+  "NumberOfFINSTs"          : "4"
+]
+module "org.jactr.modules.pm.motor.six.DefaultMotorModule6" ["org.jactr.modules.pm.motor.command.translators.PunchTranslator" : "true"]
+module "mil.navy.nrl.ncarai.mfg.episodic.EpisodicModule" []
+
+extension "org.jactr.extensions.cached.procedural.CachedProductionSystem" [
+  "ValidateInstantiations" : "false"
+  "EnableCaching" : "true"
+]
+/**
+ * common buffers
+ */
+buffers {
+  @Override
+  goal {taskManager}
+  @Override
+  retrieval {} ["Activation" : "1"]
+  @Override
+  imaginal {} ["Activation" : "1"]
+  @Override
+  episodic {} ["Activation" : "1"]
+}
+
+NextTask taskManager
+
+parameters(seq-1, seq-2, seq-3, seq-4, seq-5)[
+    "CreationTime"   : "-2"
+    "ReferenceCount" : "2"
+]
+
+/**
+ * halts progression until the lock is released
+ */
+production NextTask-unlock {
+  goal {
+    isa NextTask
+    stage =  bootstrap
+  }
+  proxy("org.jactr.tools.experiment.production.IsUnlockedCondition"){
+    lock = "participant"
+  }
+}{
+  goal {
+    stage = unlocked
+  }
+}
+
+production Interrupted {
+  ?goal {
+    buffer =  empty
+  }
+}{
+  +goal{
+    isa TaskZ
+  }
+}
+
+production goal-return-null-parent {
+  goal{
+    isa Goal
+    stage  =  completed
+    parent =  null
+  }
+}{
+  +goal{
+    isa NextTask
+  }
+} 
+ 
+ 
+}[
+  "EnablePersistentExecution" : "true"
+  "EnableUnusedCycleSkipping" : "false"
+]
