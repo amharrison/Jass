@@ -88,8 +88,8 @@ class AssignmentGenerator implements IProductionGenerator {
        * buffer = full
        * state = free 
        */
-       val bSlot = ProcGenUtilities.conditionalSlot("buffer", Condition.EQUALS)
-       bSlot.value.name = "full"
+       val bSlot = ProcGenUtilities.conditionalSlot("buffer", Condition.NOT)
+       bSlot.value.name = "empty"
        query.slots.add(bSlot)
        
        val sSlot = ProcGenUtilities.conditionalSlot("state", Condition.EQUALS)

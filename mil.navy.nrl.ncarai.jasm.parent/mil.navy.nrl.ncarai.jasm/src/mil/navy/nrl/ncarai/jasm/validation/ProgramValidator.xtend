@@ -37,6 +37,7 @@ import org.jactr.io2.jactr.modelFragment.ConditionalSlot
 import org.jactr.io2.jactr.modelFragment.ModelFragmentPackage
 import org.jactr.io2.jactr.modelFragment.SimpleSlot
 import org.jactr.io2.jactr.validation.IClassNameValidator
+import com.google.common.collect.LinkedListMultimap
 
 /**
  * This class contains custom validation rules. 
@@ -102,7 +103,9 @@ class ProgramValidator extends AbstractProgramValidator {
     EReference errorLiteral) {
 //    val bufferContents = inferBufferContents(pattern)
 //    val bufferVariables = bufferContents.keySet.map[buffer|"=" + buffer.name].toSet
-    pattern.slots.filter [ cSlot |
+
+    
+    pattern?.slots.filter [ cSlot |
       cSlot.value.name !== null && cSlot.value.name.startsWith("=")
     ].forEach [ cSlot |
       val anotherDef = pattern.slots.findFirst [ slot |
@@ -120,7 +123,7 @@ class ProgramValidator extends AbstractProgramValidator {
    */
   @Check(NORMAL)
   def checkReturn(ReturnStatement returnStatement) {
-    val returnSupplied = returnStatement.reference.value !== null;
+    val returnSupplied = returnStatement.reference !== null;
     val function = EcoreUtil2.getContainerOfType(returnStatement, Function)
     if ((function.isVoid && returnSupplied) || (function.isChunk && !returnSupplied))
       error('Function and return are inconsistent', ProgramPackage.Literals.RETURN_STATEMENT__REFERENCE)
@@ -277,6 +280,8 @@ class ProgramValidator extends AbstractProgramValidator {
     /*
      * is it a buffer? or a type or a chunk
      */
+    if(statement.assignment.functionCall!==null) return //ignore for now
+    
     val name = statement.assignment.value.name
     // number, boolean or some other
     if(name === null) return;
@@ -574,7 +579,7 @@ class ProgramValidator extends AbstractProgramValidator {
           ProgramPackage.Literals.ASSIGNMENT_STATEMENT__REFERENCE)
     }
 
-    if (statement.assignment.functionCall !== null)
+    if (statement.assignment!==null && statement.assignment.functionCall !== null)
       return
   }
 
@@ -599,6 +604,8 @@ class ProgramValidator extends AbstractProgramValidator {
   }
 
   protected def checkBindingOfGoal(Collection<? extends BufferPattern> bufferPatterns, EReference errorLiteral) {
+    if(bufferPatterns.size==0) return
+    
     val contents = bufferPatterns.last.inferBufferContents
     bufferPatterns.forEach [ bP |
       // resolve the types
@@ -707,10 +714,11 @@ class ProgramValidator extends AbstractProgramValidator {
       bindings = request.bindings.bindings
 
     val pattern = patternDefinition(request.patternReference.name, request)
-    checkVariablesInPattern(pattern, bindings, ProgramPackage.Literals.REQUEST_STATEMENT__PATTERN_REFERENCE)
+    if(pattern!==null)
+     checkVariablesInPattern(pattern, bindings, ProgramPackage.Literals.REQUEST_STATEMENT__PATTERN_REFERENCE)
 
     // check bindings
-    checkBindingOfGoal(request.bindings.bindings, ProgramPackage.Literals.REQUEST_STATEMENT__BINDINGS)
+    checkBindingOfGoal(bindings, ProgramPackage.Literals.REQUEST_STATEMENT__BINDINGS)
   }
 
   @Check(NORMAL)
@@ -730,7 +738,7 @@ class ProgramValidator extends AbstractProgramValidator {
     checkBindingOfGoal(bindings, ProgramPackage.Literals.FOR_LOOP_STATEMENT__SUBSEQUENT_BINDINGS)
   }
 
-  @Check(FAST)
+  @Check(NORMAL)
   def checkPatternType(Pattern pattern) {
     var valid = isFunction(pattern.type, pattern)
 
@@ -746,7 +754,7 @@ class ProgramValidator extends AbstractProgramValidator {
    */
   @Check(NORMAL)
   def checkPatternName(Pattern pattern) {
-    val table = patternTable(pattern)
+    val table = patternTable(pattern) //expensive
     if (table.get(pattern.name).size > 1)
       error('Patterns must be uniquely named', ProgramPackage.Literals.PATTERN__NAME)
   }
@@ -758,16 +766,13 @@ class ProgramValidator extends AbstractProgramValidator {
       error('Functions must be uniquely named', ProgramPackage.Literals.FUNCTION__NAME)
   }
 
-  /**
-   * none should be function calls
-   */
   @Check(NORMAL)
-  def checkRequestAssignments(RequestStatement statement) {
-    statement.mapping?.assignments.forEach [ ass |
-      if (ass.assignment.functionCall !== null)
-        error('Only simple assignments, not function calls, are permitted in handlers.', ass,
-          ProgramPackage.Literals.ASSIGNMENT_STATEMENT__ASSIGNMENT)
-    ]
+  def checkRequestMappingForRemove(RequestStatement statement){
+    if(statement.mapping===null) return;
+    
+    val removes = EcoreUtil2.getAllContentsOfType(statement.mapping, RemoveStatement)
+    if(removes.size==0)
+      error('Mapping handler must include a remove to clear the buffer', ProgramPackage.Literals.REQUEST_STATEMENT__MAPPING);
   }
 
   @Check(NORMAL)

@@ -9,8 +9,8 @@ Program:
 
 PackageDef:
   'namespace' name=QualifiedName 'target' target=QualifiedName '{'
-  (imports+=Import |   //used for jactr
-  includes+=Include)* //used for jasm
+  (imports+=Import | // used for jactr
+  includes+=Include)* // used for jasm
   generator=GeneratorDef?
   bufferDefs+=BufferDef*
   (chunkTypes+=ChunkType |
@@ -19,17 +19,22 @@ PackageDef:
   functions+=Function)*
   '}';
 
-Include : 'include' importedNamespace=QualifiedNameWithWildcard;
+Include:
+  'include' importedNamespace=QualifiedNameWithWildcard;
 
-BufferDef : name=ID (readable?='readable' | writable?='writable')? (error?='error')?  'requests' requests+=RequestDef (',' requests+=RequestDef)*;
+BufferDef:
+  name=ID (readable?='readable' | writable?='writable')? (error?='error')? 'requests' requests+=RequestDef (','
+  requests+=RequestDef)*;
 
-RequestDef : (wildcardRequest?='*' | requestType=[ChunkType]) '->' (wildcardResult?='*' | resultType=[ChunkType])?;
+RequestDef:
+  (wildcardRequest?='*' | requestType=[ChunkType]) '->' (wildcardResult?='*' | resultType=[ChunkType])?;
 
-GeneratorDef : '@generator' parameters=ParametersBlock;
+GeneratorDef:
+  '@generator' parameters=ParametersBlock;
 
 Pattern:
-  name=ID '=' '{' ('isa' type=ID)? //why not [ChunkType] because we need to match to functions too, 
-  slots+=ConditionalSlot* //and trying to do both will screw the parser
+  name=ID '=' '{' ('isa' type=ID)? // why not [ChunkType] because we need to match to functions too, 
+  slots+=ConditionalSlot* // and trying to do both will screw the parser
   '}';
 
 Function:
@@ -37,13 +42,18 @@ Function:
   slots+=VariableStatement)*)?
   ')' (assumedContents=WithAsStatement)? (retainedContents=RetainAsStatement)? '{'
   variables+=VariableStatement*
+  patterns+=Pattern*
   instructions+=Instruction+
   '}';
 
-WithAsStatement : 'with' assumed+=AsStatement (',' assumed+=AsStatement)*;
-RetainAsStatement : 'retain' retained+=AsStatement (',' retained+=AsStatement)*;
+WithAsStatement:
+  'with' assumed+=AsStatement (',' assumed+=AsStatement)*;
 
-AsStatement : buffer=[Buffer] 'as' type=ID;
+RetainAsStatement:
+  'retain' retained+=AsStatement (',' retained+=AsStatement)*;
+
+AsStatement:
+  buffer=[Buffer] 'as' type=ID;
 
 VariableStatement:
   'slot' assignment=AssignmentStatement;
@@ -59,7 +69,8 @@ InsertionStatement:
 Instruction:
   ForLoopStatement | IfThenElseStatement | RequestStatement | FunctionCallStatement |
   ReturnStatement | MatchStatement | OutputStatement | AssignmentStatement | RemoveStatement |
-  WhileDoStatement | DoWhileStatement | InsertionStatement | RepeatUntilStatement | UntilRepeatStatement | RewardStatement;
+  WhileDoStatement | DoWhileStatement | InsertionStatement | RepeatUntilStatement | UntilRepeatStatement |
+  RewardStatement | WaitStatement;
 
 FunctionCallStatement:
   function=[Function] '(' ((parameters+=AssignmentStatement) (',' parameters+=AssignmentStatement)*)? ')';
@@ -74,8 +85,9 @@ VariableReference:
 
 VariableValue:
   ((buffer=[Buffer] '.')? value=Value) | functionCall=FunctionCallStatement;
-  
-ReturnVariableReference : (buffer=[Buffer] '.')? value=Value;
+
+ReturnVariableReference:
+  (buffer=[Buffer] '.')? value=Value;
 
 ReturnStatement:
   {ReturnStatement} 'return' (reference=ReturnVariableReference)?;
@@ -85,8 +97,11 @@ RemoveStatement:
 
 RequestStatement:
   (forced?='force')? 'request' buffer=[Buffer] '('
-  (patternReference=VariableReference)? ')' (',' bindings=Bindings)? ('as'
+  (patternReference=VariableReference) ')' (',' bindings=Bindings)? ('as'
   cast=ID)? mapping=Mapping? handler=Handler?;
+
+WaitStatement:
+  'wait' buffer=[Buffer] handler=Handler?;
 
 RepeatUntilStatement:
   repeat=Repeat until=Until;
@@ -102,8 +117,9 @@ DoWhileStatement:
 
 Repeat:
   'repeat' block=Block;
-  
-RewardStatement : 'reward' reward=NUMERIC;
+
+RewardStatement:
+  'reward' reward=NUMERIC;
 
 Until:
   'until' '(' bindings=Bindings ')';
@@ -113,13 +129,13 @@ While:
 
 MatchStatement:
   'match' '{'
-   cases+=CaseStatement 
+  cases+=CaseStatement
   (cases+=CaseStatement)*
   'default' ':' defaultBlock=Block
   '}';
 
 CaseStatement:
-  'case'  bindings=Bindings  ('['priority=NUMERIC']')?':' block=Block;
+  'case' bindings=Bindings ('[' priority=NUMERIC ']')? ':' block=Block;
 
 OutputStatement:
   'output' '(' string=STRING (',' bindings=Bindings)? ')';
@@ -131,7 +147,7 @@ ForLoopStatement:
 
 IfThenElseStatement:
   'if' '(' bindings=Bindings ')' (thenBlock=Block)
-  (=> 'else' (elseBlock=Block))?;
+  (=>'else' (elseBlock=Block))?;
 
 Bindings:
   bindings+=BufferPattern ('&&' bindings+=BufferPattern)*;
@@ -140,8 +156,7 @@ BufferPattern:
   buffer=[Buffer] '(' pattern=[Pattern]? ')';
 
 Mapping:
-  {Mapping} '->' assignments+=AssignmentStatement+;
+  {Mapping} '->' block=Block;
 
 Handler:
   {Handler} '=>' block=Block;
-  

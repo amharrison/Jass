@@ -4,11 +4,14 @@
 package mil.navy.nrl.ncarai.jasm.formatting2
 
 import com.google.inject.Inject
+import mil.navy.nrl.ncarai.jasm.program.Bindings
 import mil.navy.nrl.ncarai.jasm.program.Block
+import mil.navy.nrl.ncarai.jasm.program.BufferPattern
 import mil.navy.nrl.ncarai.jasm.program.CaseStatement
 import mil.navy.nrl.ncarai.jasm.program.DoWhileStatement
 import mil.navy.nrl.ncarai.jasm.program.ForLoopStatement
 import mil.navy.nrl.ncarai.jasm.program.Function
+import mil.navy.nrl.ncarai.jasm.program.FunctionCallStatement
 import mil.navy.nrl.ncarai.jasm.program.IfThenElseStatement
 import mil.navy.nrl.ncarai.jasm.program.MatchStatement
 import mil.navy.nrl.ncarai.jasm.program.PackageDef
@@ -34,12 +37,13 @@ class ProgramFormatter extends ModelFragmentFormatter {
 
   def dispatch void format(PackageDef packageDef, extension IFormattableDocument document) {
     for (_import : packageDef.imports) {
-      _import.format
+      _import.format.append[highPriority; newLine]
     }
 //    packageDef.buffers.format
-    
+    packageDef.chunkDefs.forEach[chunkDef|chunkDef.format.append[setNewLines(1, 2, 2)]]
+
     for (chunkType : packageDef.chunkTypes) {
-      chunkType.format
+      chunkType.format.append[newLine]
     }
     for (pattern : packageDef.patterns) {
       pattern.format
@@ -49,15 +53,30 @@ class ProgramFormatter extends ModelFragmentFormatter {
     }
   }
 
+  def dispatch void format(BufferPattern pattern, extension IFormattableDocument document) {
+    pattern.regionFor.keyword("(").surround[noSpace]
+    pattern.regionFor.keyword(")").prepend[noSpace]
+  }
+
   def dispatch void format(Pattern pattern, extension IFormattableDocument document) {
-    pattern.prepend[setNewLines(1, 2, 3)]
+    pattern.prepend[setNewLines(1, 2, 2)]
     interior(pattern.regionFor.keyword("{").append[newLine], pattern.regionFor.keyword("}").prepend[newLine], [indent])
     for (slot : pattern.slots)
       slot.format
   }
 
+  def dispatch void format(FunctionCallStatement functionCall, extension IFormattableDocument document) {
+    functionCall.regionFor.keyword("(").surround[noSpace]
+    functionCall.regionFor.keyword(")").prepend[noSpace]
+    functionCall.append[newLine]
+  }
+
   def dispatch void format(Function function, extension IFormattableDocument document) {
+    function.prepend[setNewLines(1, 2, 2)]
     function.regionFor.feature(ProgramPackage.Literals.FUNCTION__NAME).append[noSpace]
+
+    function.regionFor.keyword("(").surround[noSpace]
+    function.regionFor.keyword(")").prepend[noSpace]
 
     if (function.assumedContents !== null)
       function.assumedContents.regionFor.keyword("with").prepend[newLine].surround[indent]
@@ -66,15 +85,22 @@ class ProgramFormatter extends ModelFragmentFormatter {
 
     interior(function.regionFor.keyword("{").append[newLine], function.regionFor.keyword("}").
       prepend[newLine], [indent])
+
+    for (slot : function.variables)
+      slot.append[newLine]
+
+    for (pattern : function.patterns)
+      pattern.format
+
     for (inst : function.instructions)
-      inst.format.prepend[indent]
+      inst.format
   }
 
   def dispatch void format(Block block, extension IFormattableDocument document) {
-    interior(block.regionFor.keyword("{").prepend[noSpace].append[newLine], block.regionFor.keyword("}").prepend[newLine].
-      prepend[indent], [indent])
+    interior(block.regionFor.keyword("{").prepend[highPriority; noSpace].append[newLine], block.regionFor.keyword("}").
+      prepend[newLine], [indent])
     for (inst : block.instructions)
-      inst.format.prepend[indent]
+      inst.format.append[newLine]
   }
 
   def dispatch void format(ReturnStatement statement, extension IFormattableDocument document) {
@@ -82,7 +108,11 @@ class ProgramFormatter extends ModelFragmentFormatter {
   }
 
   def dispatch void format(RequestStatement request, extension IFormattableDocument document) {
-    request.regionFor.keyword("request").prepend[newLine]
+    if (request.forced) {
+      request.regionFor.keyword("force").prepend[newLine]
+      request.regionFor.keyword("request").surround[oneSpace]
+    } else
+      request.regionFor.keyword("request").prepend[newLine]
     request.regionFor.keyword("(").surround[noSpace]
     request.regionFor.keyword(")").prepend[noSpace]
     request.regionFor.keyword("as").surround[oneSpace]
@@ -94,6 +124,7 @@ class ProgramFormatter extends ModelFragmentFormatter {
       request.handler?.regionFor.keyword("=>").surround[indent].prepend[newLine].nextSemanticRegion.surround[indent]
 
     request.handler?.block.format
+    request.mapping?.block.format
   }
 
   def dispatch void format(IfThenElseStatement ite, extension IFormattableDocument document) {
@@ -145,11 +176,13 @@ class ProgramFormatter extends ModelFragmentFormatter {
 
   def dispatch void format(RepeatUntilStatement repeatUntil, extension IFormattableDocument document) {
     repeatUntil.regionFor.keyword("repeat").prepend[newLine].append[noSpace]
-    repeatUntil.repeat.block.format.prepend[indent]
+    repeatUntil.repeat.block.format
 
     repeatUntil.until.regionFor.keyword("(").surround[noSpace]
     repeatUntil.until.regionFor.keyword(")").prepend[noSpace].append[newLine]
     repeatUntil.regionFor.keyword("until").prepend[noSpace].append[newLine]
+
+    repeatUntil.until.bindings.format
   }
 
   def dispatch void format(UntilRepeatStatement untilRepeat, extension IFormattableDocument document) {
@@ -157,22 +190,33 @@ class ProgramFormatter extends ModelFragmentFormatter {
     untilRepeat.until.regionFor.keyword("(").surround[noSpace]
     untilRepeat.until.regionFor.keyword(")").prepend[noSpace].append[newLine]
 
+    untilRepeat.until.bindings.format
     untilRepeat.block.format.prepend[indent]
   }
 
   def dispatch void format(MatchStatement matchStatement, extension IFormattableDocument document) {
     interior(matchStatement.regionFor.keyword("{").append[newLine], matchStatement.regionFor.keyword("}").prepend [
       newLine
-    ].prepend[indent], [indent])
+    ], [indent])
 
     for (caseStmt : matchStatement.cases)
-      caseStmt.format.prepend[indent]
+      caseStmt.format
+
+    matchStatement.regionFor.keyword("default").prepend[newLine].append[oneSpace]
+    matchStatement.regionFor.keyword(":").surround[oneSpace]
+    matchStatement.defaultBlock.format
   }
 
   def dispatch void format(CaseStatement caseStatement, extension IFormattableDocument document) {
-    caseStatement.regionFor.keyword("case").prepend[newLine].append[oneSpace]
+
+    caseStatement.regionFor.keyword("case").prepend[newLine]
     caseStatement.regionFor.keyword(":").surround[oneSpace]
-    caseStatement.block.format.prepend[indent]
+    caseStatement.bindings.format
+    caseStatement.block.format
+  }
+
+  def dispatch void format(Bindings bindings, extension IFormattableDocument document) {
+    bindings.bindings.forEach[binding|binding.format]
   }
 
 // TODO: implement for RepeatUntil, 

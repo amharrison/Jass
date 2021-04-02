@@ -28,50 +28,43 @@ import org.jactr.io2.jactr.modelFragment.Production
 class BufferRequestGenerator implements IProductionGenerator {
   @Inject extension ValidationUtilities
 
-  override generate(Pattern currentGoal, Pattern nextGoal, Instruction inst, ProceduralGenerationContext context) {
+  override generate(Pattern currentGoal, Pattern finalGoal, Instruction inst, ProceduralGenerationContext context) {
     if (inst instanceof RequestStatement) {
 
-      val needsBranch = (inst.mapping === null && inst.handler === null) ||
-        (inst.mapping !== null || inst.handler !== null)
-      val needsRequest = needsBranch && inst.patternReference !== null
       val priorState = context._goalStateProvider.priorGoalState
-
+      var branched = false
       /*
        * three productions: request, match-map, fail-execute
        */
-      if (needsBranch) {
-        if (inst.mapping !== null)
-          context._goalStateProvider.startBranch(inst.mapping.assignments, context)
-        else {
-          context._goalStateProvider.startBranch(currentGoal.slots.last.value.name, context, "no_map")
-        }
+      var nextGoal = finalGoal 
+      if (inst.mapping !== null) {
+        context._goalStateProvider.startBranch(inst.mapping.block.instructions, context)
+        branched = true
+      } else if (inst.handler !== null) {
+        context._goalStateProvider.startBranch(currentGoal.slots.last.value.name, context, "no_map")
+        branched = true
       }
+      if(branched)
+        nextGoal = context._goalStateProvider.nextGoalState
 
-      val interimGoal = context._goalStateProvider.currentGoalState
-      val finalGoal = context._goalStateProvider.nextGoalState
+      context.consumer.accept(buildRequestProduction(currentGoal, nextGoal, inst, context))
 
-      if (needsRequest)
-        context.consumer.accept(buildRequestProduction(currentGoal, finalGoal, inst, context))
 
-      // should build a mismatch production as well
-      var entryPattern = null as Pattern
-      if (inst.mapping !== null)
-        entryPattern = buildMappingProductions(interimGoal, finalGoal, inst, context)
-      else if (inst.patternReference !== null) {
-        entryPattern = buildNoMappingProduction(finalGoal, nextGoal, inst, context)
-        context._goalStateProvider.nextState // for the error handler below
+      var entryPattern = priorState
+      if (inst.mapping !== null) {
+        entryPattern = buildMappingProductions(nextGoal, finalGoal, inst, context)
+      } else if (inst.handler !== null) {
+        entryPattern = buildNoMappingProduction(nextGoal, finalGoal, inst, context)
+        context._goalStateProvider.nextState
       }
+      
 
       if (inst.handler !== null) {
-        if (inst.patternReference === null)
-          entryPattern = priorState
-
-        context.consumer.accept(buildRequestFailedProduction(entryPattern, nextGoal, inst, context))
+        context.consumer.accept(buildRequestFailedProduction(entryPattern, finalGoal, inst, context))
       }
 
-      if (needsBranch)
+      if (branched)
         context._goalStateProvider.endBranch
-
     }
   }
 
@@ -116,37 +109,9 @@ class BufferRequestGenerator implements IProductionGenerator {
   def buildMappingProductions(Pattern currentGoal, Pattern nextGoal, RequestStatement request,
     ProceduralGenerationContext context) {
 
-    /*
-     * figure out who the last assignment of the valueBuffer is
-     */
-    val lastAssignment = request.mapping.assignments.findLast [ ass |
-      (ass.assignment.buffer === request.buffer) ||
-        (ass.assignment.buffer === null && ass.assignment.value.name !== null &&
-          request.buffer === context._resolver.resolveBuffer(ass.assignment.value.name))
-    ]
-    var firstPattern = null as Pattern
+    context._productionSequencer.sequence(request.mapping.block.instructions, context)
 
-    for (ass : request.mapping.assignments) {
-      context._goalStateProvider.nextState
-
-      var ngp = context._goalStateProvider.nextGoalState
-      if (firstPattern === null)
-        firstPattern = context._goalStateProvider.currentGoalState
-      for (production : buildAssignmentProductions(context._goalStateProvider.currentGoalState, ngp, ass, request.buffer, context)) {
-        if (production !== null) {
-
-          if (ass === lastAssignment) {
-            insertRemove(production, request.buffer)
-            context._bufferStateManager.setContentType(request.buffer.name, null)
-          }
-
-          context.consumer.accept(production)
-        }
-      }
-    }
-
-    // context._goalStateProvider.endBranch
-    firstPattern
+    currentGoal
   }
 
   def buildNoMappingProduction(Pattern currentGoal, Pattern nextGoal, RequestStatement request,
@@ -161,12 +126,12 @@ class BufferRequestGenerator implements IProductionGenerator {
     match.name = goalBuffer
     rtn.conditions.add(match)
 
-    val bufferDesc = bufferDefinition(request.buffer.name,request)
+    val bufferDesc = bufferDefinition(request.buffer.name, request)
     var hasResult = true
 
     if (bufferDesc !== null) {
       val req = getMatchingRequestInfo(bufferDesc, request, context)
-      if (req!==null && !req.wildcardResult && req.resultType === null)
+      if (req !== null && !req.wildcardResult && req.resultType === null)
         hasResult = false
     }
 
@@ -195,32 +160,6 @@ class BufferRequestGenerator implements IProductionGenerator {
     context.consumer.accept(rtn)
 
     currentGoal
-  }
-
-  def insertRemove(Production production, Buffer toRemove) {
-    /*
-     * look for the modify of this buffer. create a remove and steal the slots
-     */
-    val modify = production.actions.filter(Modify).filter [ modify |
-      modify.name === toRemove
-    ].last
-    if (modify !== null) {
-      production.actions.remove(modify)
-      val remove = ModelFragmentFactory.eINSTANCE.createRemove
-      remove.name = toRemove
-      remove.slots.addAll(modify.slots)
-      production.actions.add(remove)
-    }
-  }
-
-  def buildAssignmentProductions(Pattern currentGoal, Pattern nextGoal, AssignmentStatement assignment, Buffer bufferToQuery,
-    ProceduralGenerationContext context) {
-      /*
-       * need to pass a fallback pattern, and the null production doesn't make sense for anything but buffer based
-       * assignment.reference.buffer!=null or assignment.reference.name==bufferName
-       */
-    #[AssignmentGenerator.createSimpleAssignmentProduction(currentGoal, nextGoal, assignment, bufferToQuery, context),
-      AssignmentGenerator.createSimpleAssignmentNullProduction(currentGoal, nextGoal, assignment, bufferToQuery, context)]
   }
 
   def buildRequestProduction(Pattern currentGoal, Pattern nextGoal, RequestStatement request,
@@ -282,8 +221,8 @@ class BufferRequestGenerator implements IProductionGenerator {
         bPattern.pattern.name = "tmp"
         bPattern.pattern.type = context._bufferStateManager.getContentType(bPattern.buffer.name).get().name
 
-        requestVariable = "="+bPattern.buffer.name
-        
+        requestVariable = "=" + bPattern.buffer.name
+
         bindings.add(bPattern)
       } else {
         /*
@@ -360,8 +299,7 @@ class BufferRequestGenerator implements IProductionGenerator {
     /*
      * (1), custom add
      */
-    if(requestLiteral!==null)
-    {
+    if (requestLiteral !== null) {
       val addRequest = ModelFragmentFactory.eINSTANCE.createAdd
       addRequest.name = request.buffer
       addRequest.isa = ModelFragmentFactory.eINSTANCE.createIsaBlock
@@ -371,8 +309,7 @@ class BufferRequestGenerator implements IProductionGenerator {
     /*
      * (2-4) custom add of variable reference
      */
-    if(requestVariable!==null)
-    {
+    if (requestVariable !== null) {
       val addRequest = ModelFragmentFactory.eINSTANCE.createAdd
       addRequest.name = request.buffer
       addRequest.isa = ModelFragmentFactory.eINSTANCE.createIsaBlock
@@ -421,8 +358,8 @@ class BufferRequestGenerator implements IProductionGenerator {
     ]
     if (wildCardRequest !== null)
       return wildCardRequest
-      
-    val patternDef = patternDefinition(request.patternReference.name, request)  
+
+    val patternDef = patternDefinition(request.patternReference.name, request)
     val requestType = context._resolver.resolveChunkType(patternDef.type)
     /*
      * in depth check
@@ -441,17 +378,17 @@ class BufferRequestGenerator implements IProductionGenerator {
      * 
      */
     if (request.cast !== null)
-      context._bufferStateManager.setContentType(request.buffer.name, getChunkType(request,request.cast))
+      context._bufferStateManager.setContentType(request.buffer.name, getChunkType(request, request.cast))
     else {
       /*
        * the only two conditions that don't require a cast are pattern and buffer direct
        */
       var requestType = null as ChunkType
       val patternDef = patternDefinition(request.patternReference.name, request)
-      if(patternDef!==null)
-       requestType = context._resolver.resolveChunkType(patternDef.type)
+      if (patternDef !== null)
+        requestType = context._resolver.resolveChunkType(patternDef.type)
       else
-       requestType = context._bufferStateManager.getContentType(request.patternReference.name).get() 
+        requestType = context._bufferStateManager.getContentType(request.patternReference.name).get()
 
       val bufferDesc = bufferDefinition(request.buffer.name, request)
       if (bufferDesc === null)

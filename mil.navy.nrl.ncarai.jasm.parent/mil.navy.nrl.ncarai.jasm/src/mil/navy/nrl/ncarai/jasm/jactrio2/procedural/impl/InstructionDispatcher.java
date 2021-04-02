@@ -23,6 +23,7 @@ import mil.navy.nrl.ncarai.jasm.jactrio2.procedural.impl.inst.RepeatUntilGenerat
 import mil.navy.nrl.ncarai.jasm.jactrio2.procedural.impl.inst.ReturnGenerator;
 import mil.navy.nrl.ncarai.jasm.jactrio2.procedural.impl.inst.RewardGenerator;
 import mil.navy.nrl.ncarai.jasm.jactrio2.procedural.impl.inst.UntilRepeatGenerator;
+import mil.navy.nrl.ncarai.jasm.jactrio2.procedural.impl.inst.WaitGenerator;
 import mil.navy.nrl.ncarai.jasm.jactrio2.procedural.impl.inst.WhileDoGenerator;
 import mil.navy.nrl.ncarai.jasm.program.Instruction;
 import mil.navy.nrl.ncarai.jasm.program.Pattern;
@@ -43,27 +44,12 @@ public class InstructionDispatcher {
 				ReturnGenerator.class, RemoveGenerator.class, ForEachGenerator.class,
 				OutputGenerator.class, WhileDoGenerator.class, DoWhileGenerator.class,
 				InsertionGenerator.class, RepeatUntilGenerator.class, UntilRepeatGenerator.class,
-				MatchCaseGenerator.class, RewardGenerator.class};
+				MatchCaseGenerator.class, RewardGenerator.class, WaitGenerator.class};
 		
 		for(Class<IProductionGenerator> c : generators) {
 			_productionGenerators.add(_injector.getInstance(c));
 		}
-//			
-//		
-//		_productionGenerators.add(new AssignmentGenerator());
-//		_productionGenerators.add(new IfThenElseGenerator());
-//		_productionGenerators.add(new FunctionalCallGenerator());
-//		_productionGenerators.add(new BufferRequestGenerator());
-//		_productionGenerators.add(new ReturnGenerator());
-//		_productionGenerators.add(new RemoveGenerator());
-//		_productionGenerators.add(new ForEachGenerator());
-//		_productionGenerators.add(new OutputGenerator());
-//		_productionGenerators.add(new WhileDoGenerator());
-//		_productionGenerators.add(new DoWhileGenerator());
-//		_productionGenerators.add(new InsertionGenerator());
-//		_productionGenerators.add(new RepeatUntilGenerator());
-//		_productionGenerators.add(new UntilRepeatGenerator());
-//		_productionGenerators.add(new MatchCaseGenerator());
+
 	}
 
 	public void generate(Pattern currentGoal, Pattern nextGoal, Instruction inst, ProceduralGenerationContext context) {

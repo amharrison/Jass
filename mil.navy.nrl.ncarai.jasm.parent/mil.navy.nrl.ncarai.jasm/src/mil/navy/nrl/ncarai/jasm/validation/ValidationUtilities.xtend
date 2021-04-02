@@ -42,11 +42,9 @@ class ValidationUtilities {
   @Inject IQualifiedNameConverter _qualifiedNameConverter
   @Inject IContainer.Manager _containerManager
 
-
-  new(){
-    
+  new() {
   }
-  
+
   private def startsWith(String string, Set<String> startsWith) {
 
     for (start : startsWith)
@@ -345,11 +343,8 @@ class ValidationUtilities {
       if (statement.patternReference.name !== null && isPattern(statement.patternReference.name, statement)) {
         pattern = patternDefinition(statement.patternReference.name, statement)
         type = getChunkType(statement, pattern.type)
-      }
-      else
-      if(statement.patternReference.name!==null && isBuffer(statement.patternReference.name, statement))
-      {
-        //type = //would need ProcGenContext to get the buffer contents.. 
+      } else if (statement.patternReference.name !== null && isBuffer(statement.patternReference.name, statement)) {
+        // type = //would need ProcGenContext to get the buffer contents.. 
       }
 
       val def = bufferDefinition(statement.buffer.name, statement)
@@ -457,21 +452,21 @@ class ValidationUtilities {
     rtnMap
   }
 
-/*
- * return the matching request info for the requestType.
- */
+  /*
+   * return the matching request info for the requestType.
+   */
   protected def getMatchingRequestInfo(BufferDef bufferDesc, ChunkType requestType) {
 
     /*
      * in depth check
      */
     for (req : bufferDesc.requests) {
-      if (!req.wildcardRequest)
+      if (!req.wildcardRequest) {
         if (requestType.isA(req.requestType)) {
           return req
         }
-       else
-        return req 
+      } else
+        return req
     }
     return null
   }

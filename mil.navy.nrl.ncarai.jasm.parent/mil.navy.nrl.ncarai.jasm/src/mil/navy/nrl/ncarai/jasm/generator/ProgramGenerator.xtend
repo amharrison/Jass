@@ -28,8 +28,7 @@ class ProgramGenerator extends AbstractGenerator {
 
   @Inject IModelBuilder _modelBuilder
   @Inject Provider<ResourceSet> _resourceSetProvider;
-  @Inject
-  public IResourceValidator _validator;
+  
 
   override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
 
@@ -65,16 +64,16 @@ class ProgramGenerator extends AbstractGenerator {
       newResource.save(null)
     }
 
-/**
- * crappy hack to force the indexing of generated files. For some reason
- * xtext does not run its builder on freshly generated files. This delayed touch
- * allows us to force the builder to process the generated files.
- */
+    /**
+     * crappy hack to force the indexing of generated files. For some reason
+     * xtext does not run its builder on freshly generated files. This delayed touch
+     * allows us to force the builder to process the generated files.
+     */
     val workspace = ResourcesPlugin.workspace
     val path = fsa.getURI(loaderPath + ".jactr").toPlatformString(true)
     val file = workspace.root.getFile(new Path(path))
 
-    val job = Job.create("touch", [monitor | 
+    val job = Job.create("touch", [ monitor |
       file.touch(new NullProgressMonitor)
     ])
     job.schedule(500)

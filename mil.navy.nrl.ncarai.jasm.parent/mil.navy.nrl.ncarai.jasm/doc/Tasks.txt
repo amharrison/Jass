@@ -21,6 +21,8 @@
    
  - free standing cast statement: buffer as chunktype
    - wouldn't generate any productions, only manipulate the generation context (buffer content type)
+   
+ - validation if clear, no mapping
      
  - permit patterns to be defined globally or locally (w/in function). This would reduce clutter of the global space
    caused by function specific (goal) patterns. Should be relatively easy to implement
