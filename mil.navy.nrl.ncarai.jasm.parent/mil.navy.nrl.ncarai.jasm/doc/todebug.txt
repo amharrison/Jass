@@ -1,0 +1,6 @@
+
+
+Unexpected slot value?
+ failure to resolve?
+ WARN  org.jactr.core.slot.BasicSlot  - Unexpected slot value found. Not critical, but could cause issues down the line. [org.jactr.io2.jactr.modelFragment.impl.ValueImpl@2721044 (name: completed, string: null, number: null, boolean: null) : ValueImpl]
+  - due to not exporting the package containing the models

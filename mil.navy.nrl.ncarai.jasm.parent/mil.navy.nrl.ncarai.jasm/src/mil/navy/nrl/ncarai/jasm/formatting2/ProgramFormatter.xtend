@@ -18,10 +18,12 @@ import mil.navy.nrl.ncarai.jasm.program.PackageDef
 import mil.navy.nrl.ncarai.jasm.program.Pattern
 import mil.navy.nrl.ncarai.jasm.program.Program
 import mil.navy.nrl.ncarai.jasm.program.ProgramPackage
+import mil.navy.nrl.ncarai.jasm.program.RemoveStatement
 import mil.navy.nrl.ncarai.jasm.program.RepeatUntilStatement
 import mil.navy.nrl.ncarai.jasm.program.RequestStatement
 import mil.navy.nrl.ncarai.jasm.program.ReturnStatement
 import mil.navy.nrl.ncarai.jasm.program.UntilRepeatStatement
+import mil.navy.nrl.ncarai.jasm.program.WaitStatement
 import mil.navy.nrl.ncarai.jasm.program.WhileDoStatement
 import mil.navy.nrl.ncarai.jasm.services.ProgramGrammarAccess
 import org.eclipse.xtext.formatting2.IFormattableDocument
@@ -59,7 +61,7 @@ class ProgramFormatter extends ModelFragmentFormatter {
   }
 
   def dispatch void format(Pattern pattern, extension IFormattableDocument document) {
-    pattern.prepend[setNewLines(1, 2, 2)]
+    pattern.prepend[setNewLines(1, 1, 1)]
     interior(pattern.regionFor.keyword("{").append[newLine], pattern.regionFor.keyword("}").prepend[newLine], [indent])
     for (slot : pattern.slots)
       slot.format
@@ -106,6 +108,14 @@ class ProgramFormatter extends ModelFragmentFormatter {
   def dispatch void format(ReturnStatement statement, extension IFormattableDocument document) {
     statement.regionFor.keyword("return").prepend[newLine]
   }
+  
+  def dispatch void format(WaitStatement statement, extension IFormattableDocument document) {
+    statement.regionFor.keyword("wait").prepend[newLine]
+  }
+
+  def dispatch void format(RemoveStatement statement, extension IFormattableDocument document) {
+    statement.regionFor.keywords(",").forEach[region|region.prepend[noSpace].append[oneSpace]]
+  }
 
   def dispatch void format(RequestStatement request, extension IFormattableDocument document) {
     if (request.forced) {
@@ -114,22 +124,33 @@ class ProgramFormatter extends ModelFragmentFormatter {
     } else
       request.regionFor.keyword("request").prepend[newLine]
     request.regionFor.keyword("(").surround[noSpace]
-    request.regionFor.keyword(")").prepend[noSpace]
-    request.regionFor.keyword("as").surround[oneSpace]
 
-    if (request.mapping !== null)
-      request.mapping?.regionFor.keyword("->").surround[indent].prepend[newLine].append[oneSpace].nextSemanticRegion.
+    if (request.cast === null) {
+      request.regionFor.keyword(")").surround[noSpace]
+      request?.bindings.format
+    } else {
+      request.regionFor.keyword(")").prepend[noSpace]
+      request?.bindings.format
+      request.regionFor.keyword("as").surround[oneSpace]
+    }
+
+    try {
+
+      request?.mapping.regionFor.keyword("->")?.surround[indent].prepend[newLine].append[oneSpace].nextSemanticRegion?.
         surround[indent]
-    if (request.handler !== null)
-      request.handler?.regionFor.keyword("=>").surround[indent].prepend[newLine].nextSemanticRegion.surround[indent]
+      request?.handler.regionFor.keyword("=>")?.surround[indent].prepend[newLine].nextSemanticRegion?.surround[indent]
+    } catch (NullPointerException npe) {
+      //hack until we can determine why this is being thrown by code generators
+    }
 
-    request.handler?.block.format
-    request.mapping?.block.format
+    request?.handler?.block.format
+    request?.mapping?.block.format
   }
 
   def dispatch void format(IfThenElseStatement ite, extension IFormattableDocument document) {
 //    ite.regionFor.keyword("if").prepend[newLine]
     ite.regionFor.keyword("(").surround[noSpace]
+    ite.bindings.format
     ite.regionFor.keyword(")").surround[noSpace]
     ite.thenBlock.format
     if (ite.elseBlock !== null) {
@@ -170,6 +191,7 @@ class ProgramFormatter extends ModelFragmentFormatter {
     doWhile.regionFor.keyword("while").prepend[newLine].append[newLine]
     doWhile.^while.regionFor.keyword("(").surround[noSpace]
     doWhile.^while.regionFor.keyword(")").prepend[noSpace].append[newLine]
+    doWhile.^while?.bindings.format
 
     doWhile.block.format.prepend[indent]
   }

@@ -3,6 +3,15 @@
  - packages
  - classes
 
+- need special handling for imaginal modifications
+ - need to query state = free for all imaginal references
+ - new buffer spec field? async 
+ 
+ - if {} else if {} is unsupported
+ x need to move patterns into local namespace
+ x need to ditch mapping for block
+ - support late block like late error (i.e., request buffer() ->, =>)
+ 
  - fix parameters in jactr so it applies across all files imported.
  - case fall through? 
     case ... :
@@ -24,7 +33,7 @@
    
  - validation if clear, no mapping
      
- - permit patterns to be defined globally or locally (w/in function). This would reduce clutter of the global space
+ x permit patterns to be defined globally or locally (w/in function). This would reduce clutter of the global space
    caused by function specific (goal) patterns. Should be relatively easy to implement
  
  - validate that the cast is valid
@@ -49,5 +58,6 @@
  
  - validate function call 
  - validate insertion point (unique names w/in function)
+ - support implicit removes (function call with fewer retains than withs)
  
  - improve validation of remove/request pairings

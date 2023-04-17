@@ -13,6 +13,7 @@ PackageDef:
   includes+=Include)* // used for jasm
   generator=GeneratorDef?
   bufferDefs+=BufferDef*
+  buffers=Buffers?
   (chunkTypes+=ChunkType |
   chunkDefs+=Chunks |
   patterns+=Pattern |

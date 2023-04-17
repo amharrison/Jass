@@ -85,7 +85,7 @@ class AssignmentGenerator implements IProductionGenerator {
       val query = ModelFragmentFactory.eINSTANCE.createQuery
       query.name = bufferToQuery
       /*
-       * buffer = full
+       * buffer != empty
        * state = free 
        */
        val bSlot = ProcGenUtilities.conditionalSlot("buffer", Condition.NOT)

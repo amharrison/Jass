@@ -18,6 +18,8 @@
         containment="true"/>
     <eStructuralFeatures xsi:type="ecore:EReference" name="bufferDefs" upperBound="-1"
         eType="#//BufferDef" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="buffers" eType="ecore:EClass platform:/resource/org.jactr.io2.jactr/model/generated/ModelFragment.ecore#//Buffers"
+        containment="true"/>
     <eStructuralFeatures xsi:type="ecore:EReference" name="chunkTypes" upperBound="-1"
         eType="ecore:EClass platform:/resource/org.jactr.io2.jactr/model/generated/ModelFragment.ecore#//ChunkType"
         containment="true"/>
@@ -69,6 +71,8 @@
         containment="true"/>
     <eStructuralFeatures xsi:type="ecore:EReference" name="variables" upperBound="-1"
         eType="#//VariableStatement" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="patterns" upperBound="-1"
+        eType="#//Pattern" containment="true"/>
     <eStructuralFeatures xsi:type="ecore:EReference" name="instructions" upperBound="-1"
         eType="#//Instruction" containment="true"/>
   </eClassifiers>
@@ -143,6 +147,11 @@
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="cast" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
     <eStructuralFeatures xsi:type="ecore:EReference" name="mapping" eType="#//Mapping"
         containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="handler" eType="#//Handler"
+        containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="WaitStatement" eSuperTypes="#//Instruction">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="buffer" eType="ecore:EClass platform:/resource/org.jactr.io2.jactr/model/generated/ModelFragment.ecore#//Buffer"/>
     <eStructuralFeatures xsi:type="ecore:EReference" name="handler" eType="#//Handler"
         containment="true"/>
   </eClassifiers>
@@ -232,8 +241,8 @@
     <eStructuralFeatures xsi:type="ecore:EReference" name="pattern" eType="#//Pattern"/>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EClass" name="Mapping">
-    <eStructuralFeatures xsi:type="ecore:EReference" name="assignments" upperBound="-1"
-        eType="#//AssignmentStatement" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="block" eType="#//Block"
+        containment="true"/>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EClass" name="Handler">
     <eStructuralFeatures xsi:type="ecore:EReference" name="block" eType="#//Block"
