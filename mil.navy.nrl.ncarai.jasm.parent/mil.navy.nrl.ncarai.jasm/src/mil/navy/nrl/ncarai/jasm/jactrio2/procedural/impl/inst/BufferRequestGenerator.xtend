@@ -5,7 +5,6 @@ import javax.inject.Inject
 import mil.navy.nrl.ncarai.jasm.jactrio2.procedural.IProductionGenerator
 import mil.navy.nrl.ncarai.jasm.jactrio2.procedural.ProcGenUtilities
 import mil.navy.nrl.ncarai.jasm.jactrio2.procedural.ProceduralGenerationContext
-import mil.navy.nrl.ncarai.jasm.program.AssignmentStatement
 import mil.navy.nrl.ncarai.jasm.program.BufferDef
 import mil.navy.nrl.ncarai.jasm.program.BufferPattern
 import mil.navy.nrl.ncarai.jasm.program.Function
@@ -21,9 +20,9 @@ import org.jactr.io2.jactr.modelFragment.Buffer
 import org.jactr.io2.jactr.modelFragment.ChunkDef
 import org.jactr.io2.jactr.modelFragment.ChunkType
 import org.jactr.io2.jactr.modelFragment.Condition
+import org.jactr.io2.jactr.modelFragment.ConditionalSlot
 import org.jactr.io2.jactr.modelFragment.ModelFragmentFactory
-import org.jactr.io2.jactr.modelFragment.Modify
-import org.jactr.io2.jactr.modelFragment.Production
+import org.eclipse.emf.ecore.util.EcoreUtil
 
 class BufferRequestGenerator implements IProductionGenerator {
   @Inject extension ValidationUtilities
@@ -258,6 +257,9 @@ class BufferRequestGenerator implements IProductionGenerator {
      * merge all the bindings together into a series of conditions
      */
     conditions = ProcGenUtilities.mergePatterns(currentGoal, bindings, context)
+    
+    
+    
     // handle goal first
     production.conditions.add(ProcGenUtilities.toMatch(conditions.remove(goalBuffer), context))
 
@@ -273,6 +275,29 @@ class BufferRequestGenerator implements IProductionGenerator {
      */
     val emptyNotBusy = ModelFragmentFactory.eINSTANCE.createQuery
     emptyNotBusy.name = request.buffer
+    
+//    var relevantCondition = conditions.get(referenceBuffer)
+//    /*
+//     * find all the :slot names in the relevantCondition, remove them and put them in
+//     * the query w/o ':'
+//     */
+//    var metaSlots = newArrayList()
+//    if (relevantCondition!==null)
+//    {
+//      System.err.println("Checking for metaslots")
+//      
+//      for (ConditionalSlot slot : relevantCondition.getPattern().getSlots())
+//       if (slot.getName().startsWith(":"))
+//        {
+//          relevantCondition.getPattern().getSlots().remove(slot)
+//          val newSlot = EcoreUtil.copy(slot)
+//          
+//          newSlot.name=slot.getName().substring(1, slot.getName().length())
+//          metaSlots.add(newSlot)
+//        }
+//    }
+    
+    
     var slot = ProcGenUtilities.conditionalSlot("state", Condition.NOT)
     slot.value.name = "busy"
     emptyNotBusy.slots.add(slot)
@@ -282,6 +307,8 @@ class BufferRequestGenerator implements IProductionGenerator {
       slot.value.name = "empty"
       emptyNotBusy.slots.add(slot)
     }
+    
+//    emptyNotBusy.slots.addAll(metaSlots)
 
     production.conditions.add(emptyNotBusy)
 
