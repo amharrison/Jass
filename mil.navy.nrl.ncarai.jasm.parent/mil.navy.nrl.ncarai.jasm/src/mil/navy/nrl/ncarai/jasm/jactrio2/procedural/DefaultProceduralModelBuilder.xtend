@@ -1,14 +1,16 @@
 package mil.navy.nrl.ncarai.jasm.jactrio2.procedural
 
+import com.google.inject.Inject
 import com.google.inject.Injector
 import java.util.Collection
-import javax.inject.Inject
 import mil.navy.nrl.ncarai.jasm.jactrio2.IModelBuilder
 import mil.navy.nrl.ncarai.jasm.program.Function
 import mil.navy.nrl.ncarai.jasm.program.GeneratorDef
+import mil.navy.nrl.ncarai.jasm.program.PackageDef
 import mil.navy.nrl.ncarai.jasm.program.Program
 import mil.navy.nrl.ncarai.jasm.program.VariableStatement
 import mil.navy.nrl.ncarai.jasm.scoping.GlobalImplicitImportManager
+import mil.navy.nrl.ncarai.jasm.validation.ValidationUtilities
 import org.eclipse.emf.ecore.util.EcoreUtil
 import org.eclipse.xtext.EcoreUtil2
 import org.jactr.io2.jactr.comment.CommentUtilities
@@ -17,8 +19,6 @@ import org.jactr.io2.jactr.modelFragment.Chunks
 import org.jactr.io2.jactr.modelFragment.ModelFragment
 import org.jactr.io2.jactr.modelFragment.ModelFragmentFactory
 import org.jactr.io2.jactr.modelFragment.Production
-import mil.navy.nrl.ncarai.jasm.validation.ValidationUtilities
-import mil.navy.nrl.ncarai.jasm.program.PackageDef
 
 class DefaultProceduralModelBuilder implements IModelBuilder {
 

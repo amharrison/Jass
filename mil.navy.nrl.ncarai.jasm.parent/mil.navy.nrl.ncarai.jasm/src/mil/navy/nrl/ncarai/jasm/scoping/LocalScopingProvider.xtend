@@ -1,7 +1,7 @@
 package mil.navy.nrl.ncarai.jasm.scoping
 
+import com.google.inject.Inject
 import java.util.List
-import javax.inject.Inject
 import org.eclipse.xtext.scoping.impl.ImportNormalizer
 import org.eclipse.xtext.scoping.impl.ImportedNamespaceAwareLocalScopeProvider
 

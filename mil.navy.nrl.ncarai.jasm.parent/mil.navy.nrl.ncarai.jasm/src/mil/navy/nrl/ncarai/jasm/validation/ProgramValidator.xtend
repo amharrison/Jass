@@ -4,10 +4,10 @@
 package mil.navy.nrl.ncarai.jasm.validation
 
 import com.google.common.collect.Sets
+import com.google.inject.Inject
 import java.util.Collection
 import java.util.Collections
 import java.util.Set
-import javax.inject.Inject
 import mil.navy.nrl.ncarai.jasm.program.AssignmentStatement
 import mil.navy.nrl.ncarai.jasm.program.BufferPattern
 import mil.navy.nrl.ncarai.jasm.program.DoWhileStatement
@@ -37,7 +37,6 @@ import org.jactr.io2.jactr.modelFragment.ConditionalSlot
 import org.jactr.io2.jactr.modelFragment.ModelFragmentPackage
 import org.jactr.io2.jactr.modelFragment.SimpleSlot
 import org.jactr.io2.jactr.validation.IClassNameValidator
-import com.google.common.collect.LinkedListMultimap
 
 /**
  * This class contains custom validation rules. 

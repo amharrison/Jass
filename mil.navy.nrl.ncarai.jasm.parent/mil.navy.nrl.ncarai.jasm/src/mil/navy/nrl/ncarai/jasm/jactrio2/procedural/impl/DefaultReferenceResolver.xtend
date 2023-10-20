@@ -1,15 +1,15 @@
 package mil.navy.nrl.ncarai.jasm.jactrio2.procedural.impl
 
+import com.google.inject.Inject
 import java.util.Map
-import javax.inject.Inject
 import mil.navy.nrl.ncarai.jasm.jactrio2.procedural.IReferenceResolver
 import mil.navy.nrl.ncarai.jasm.program.Program
+import mil.navy.nrl.ncarai.jasm.validation.ValidationUtilities
 import org.eclipse.emf.ecore.EObject
 import org.jactr.io2.jactr.modelFragment.Buffer
 import org.jactr.io2.jactr.modelFragment.ChunkDef
 import org.jactr.io2.jactr.modelFragment.ChunkType
 import org.jactr.io2.jactr.validation.ModelFragmentUtil
-import mil.navy.nrl.ncarai.jasm.validation.ValidationUtilities
 
 class DefaultReferenceResolver implements IReferenceResolver {
 

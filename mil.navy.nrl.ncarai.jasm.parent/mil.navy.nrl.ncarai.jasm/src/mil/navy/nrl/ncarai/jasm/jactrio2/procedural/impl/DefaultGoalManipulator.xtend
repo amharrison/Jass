@@ -1,8 +1,8 @@
 package mil.navy.nrl.ncarai.jasm.jactrio2.procedural.impl
 
+import com.google.inject.Inject
 import java.util.Collections
 import java.util.Optional
-import javax.inject.Inject
 import mil.navy.nrl.ncarai.jasm.jactrio2.procedural.IGoalManipulator
 import mil.navy.nrl.ncarai.jasm.jactrio2.procedural.ProcGenUtilities
 import mil.navy.nrl.ncarai.jasm.jactrio2.procedural.ProceduralGenerationContext

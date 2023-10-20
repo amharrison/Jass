@@ -3,8 +3,8 @@
  */
 package mil.navy.nrl.ncarai.jasm.generator
 
-import javax.inject.Inject
-import javax.inject.Provider
+import com.google.inject.Inject
+import com.google.inject.Provider
 import mil.navy.nrl.ncarai.jasm.jactrio2.IModelBuilder
 import mil.navy.nrl.ncarai.jasm.program.PackageDef
 import mil.navy.nrl.ncarai.jasm.program.Program
@@ -17,7 +17,6 @@ import org.eclipse.emf.ecore.resource.ResourceSet
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
-import org.eclipse.xtext.validation.IResourceValidator
 
 /**
  * Generates code from your model files on save.

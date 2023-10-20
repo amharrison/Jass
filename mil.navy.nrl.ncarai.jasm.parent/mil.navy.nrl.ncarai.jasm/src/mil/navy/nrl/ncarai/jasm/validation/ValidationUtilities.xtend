@@ -1,10 +1,10 @@
 package mil.navy.nrl.ncarai.jasm.validation
 
 import com.google.common.collect.LinkedListMultimap
+import com.google.inject.Inject
 import java.util.Collection
 import java.util.Set
 import java.util.TreeSet
-import javax.inject.Inject
 import mil.navy.nrl.ncarai.jasm.jactrio2.procedural.ProcGenUtilities
 import mil.navy.nrl.ncarai.jasm.program.BufferDef
 import mil.navy.nrl.ncarai.jasm.program.ForLoopStatement
