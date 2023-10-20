@@ -8,10 +8,9 @@ import jactr.aural.*
 import jactr.vocal.*
 import jactr.goal.*
 import jasm.procedural.Goal.*
-
 chunktype Association {
   one = null
-  two = null 
+  two = null
 }
 
 /*
@@ -34,17 +33,15 @@ anyAural = {
   isa audio-event
 }
 
-
 sperlingParamBinding = {
   isa Sperling
   parameter =  =parameter
 }
 
-
 unattendedVisual = {
   isa visual-location
   kind      =  text
-  nearest   =  =parameter
+  :nearest  =  =parameter
   :attended != true
 }
 
@@ -52,12 +49,11 @@ anyVisLoc = {
   isa visual-location
 }
 
-
 nextUnattendedVisual = {
   isa visual-location
   kind      =  text
   screen-x  > current
-  nearest   =  current
+  :nearest  =  current
   :attended != true
 }
 
@@ -70,7 +66,6 @@ sperlingParamIsFailed = {
   isa Sperling
   parameter =  failed
 }
-
 
 moveVisualAttention = {
   isa attend-to
@@ -96,43 +91,49 @@ retrievalTwo = {
   two =  =value
 }
 
-
 function void Sperling(){
   slot parameter = failed
-
   /*
    * wait for tone
    */
   do{
-      /* 
-       * search for a tone 
-       */
-    request aural-location(unattendedAural)as audio-event
-      -> parameter = aural-location
-      => {
+    /* 
+     * search for a tone 
+     */
+    request aural-location(unattendedAural) as audio-event
+      ->{
+      parameter = aural-location
+      remove aural-location
+    }
+      =>{
       parameter=failed
     }
-
-      /*
-       * tone was found, attend to it 
-       */
+    /*
+     * tone was found, attend to it 
+     */
     if(goal(sperlingParamNotFailed)){
       request aural(moveAttention), 
                goal(sperlingParamBinding) as tone
-        -> parameter = aural.pitch
-        => {
+        ->{
+        parameter = aural.pitch
+        remove aural
+      }
+        =>{
         parameter = failed
       }
     }
   }while(goal(sperlingParamIsFailed))
-    /*
-     * map tone to visual-location
-     */
+  /*
+   * map tone to visual-location
+   */
   if(goal(sperlingParamNotFailed)){
     request retrieval(mapAssociation), 
                  goal(sperlingParamBinding) as Association
-      -> parameter = retrieval.two
-      => {
+      ->{
+      parameter = retrieval.two
+      remove retrieval
+    }
+      =>{
       parameter = failed
     }
   } 
@@ -145,11 +146,14 @@ function void Sperling(){
     nextUnattendedVisual, goal(sperlingParamBinding)){
     request visual(moveVisualAttention), 
             visual-location(anyVisLoc) as text
-      -> parameter = visual 
-      => {
+      ->{
+      parameter = visual
+      remove visual
+    }
+      =>{
       parameter = failed
     }
-   if(goal(sperlingParamNotFailed)){
+    if(goal(sperlingParamNotFailed)){
       output("I see =parameter",goal(sperlingParamBinding))
     }
   }

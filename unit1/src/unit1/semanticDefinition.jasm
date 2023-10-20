@@ -60,7 +60,7 @@ function element IsMember(slot object = null, slot category = null)
         goal(parameterBinding)){
       judgment = true
     }
-    else{
+    else{ 
       /*
        * change the object that we are querying with
        * the retrieval request. this is the chaining
