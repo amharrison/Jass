@@ -1,7 +1,7 @@
 package mil.navy.nrl.ncarai.jasm.jactrio2.procedural.impl.inst
 
+import com.google.inject.Inject
 import java.util.Map
-import javax.inject.Inject
 import mil.navy.nrl.ncarai.jasm.jactrio2.procedural.IProductionGenerator
 import mil.navy.nrl.ncarai.jasm.jactrio2.procedural.ProcGenUtilities
 import mil.navy.nrl.ncarai.jasm.jactrio2.procedural.ProceduralGenerationContext
@@ -20,9 +20,7 @@ import org.jactr.io2.jactr.modelFragment.Buffer
 import org.jactr.io2.jactr.modelFragment.ChunkDef
 import org.jactr.io2.jactr.modelFragment.ChunkType
 import org.jactr.io2.jactr.modelFragment.Condition
-import org.jactr.io2.jactr.modelFragment.ConditionalSlot
 import org.jactr.io2.jactr.modelFragment.ModelFragmentFactory
-import org.eclipse.emf.ecore.util.EcoreUtil
 
 class BufferRequestGenerator implements IProductionGenerator {
   @Inject extension ValidationUtilities
